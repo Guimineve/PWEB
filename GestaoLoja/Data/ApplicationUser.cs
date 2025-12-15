@@ -1,16 +1,21 @@
 using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace GestaoLoja.Data
-{    public class ApplicationUser : IdentityUser
+{
+    public class ApplicationUser : IdentityUser
     {
+        [PersonalData]
+        [StringLength(100)]
         public string Nome { get; set; }
-        public string Apelido { get; set; }
+
+        [PersonalData]
         public int NIF { get; set; }
 
-        public byte[]? Fotografia { get; set; }
+        [PersonalData]
+        [StringLength(200)]
+        public string Morada { get; set; }
 
-        [NotMapped]
-        public string? ImageFile { get; set; }
+        public string EstadoConta { get; set; } = "Pendente";
     }
 }

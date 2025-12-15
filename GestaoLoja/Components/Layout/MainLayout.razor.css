@@ -6,6 +6,7 @@
 
 main {
     flex: 1;
+    min-width: 0; /*Permite encolher corretamente*/
 }
 
 .sidebar {
@@ -52,10 +53,11 @@ main {
     }
 
     .sidebar {
-        width: 250px;
+        width: 270px;
         height: 100vh;
         position: sticky;
         top: 0;
+        flex-shrink:0; /*Impede que o sidebar encolha*/
     }
 
     .top-row {

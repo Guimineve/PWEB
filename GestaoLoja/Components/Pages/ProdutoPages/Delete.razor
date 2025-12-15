@@ -1,83 +1,80 @@
 ﻿@page "/produtos/delete"
-
-@* @attribute [Authorize(Roles = "Admin")] *@
-
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
 @using GestaoLoja.Data
-@inject IDbContextFactory<GestaoLoja.Data.ApplicationDbContext> DbFactory
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
+<PageTitle>Apagar Produto</PageTitle>
 
-<PageTitle>Apagar</PageTitle>
+<div class="container mt-4">
+    <h1 class="text-danger">Apagar Produto</h1>
 
-<h1>Apagar Registo</h1>
-
-<h3>Tem a certeza de que quer apagar este registo?</h3>
-<div>
-    <h4>Produto</h4>
+    @if (!string.IsNullOrEmpty(MensagemErro))
+    {
+        <div class="alert alert-danger">
+            <strong>Erro:</strong> @MensagemErro
+        </div>
+    }
+    else
+    {
+        <h3 class="text-danger">Tem a certeza? Esta ação é irreversível.</h3>
+    }
     <hr />
+
     @if (produto is null)
     {
-        <p><em>Carregando...</em></p>
+        <p><em>A carregar...</em></p>
     }
-    else {
-        <div>
-            @if (@produto.Imagem != null && @produto.Imagem.Length > 0)
-            {
-                <img title="Imagem Actual: @produto.UrlImagem" id="imagePreview" class="img-thumbnail  mt-2" src="data:image/*;base64,@(Convert.ToBase64String(produto.Imagem))" style="width:200px">
-            }
-            else
-            {
-                <img id="imagePreview" class="img-thumbnail mt-2" src="img/noproductstrans.png" style="width:50%;">
-            }
+    else
+    {
+        <div class="card border-danger mb-3">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-4">
+                    @if (produto.Imagem != null && produto.Imagem.Length > 0)
+                    {
+                        <img src="data:image/png;base64,@(Convert.ToBase64String(produto.Imagem))"
+                             class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <img src="/img/noproductstrans.png" class="img-thumbnail" style="width: 100px;" />
+                    }
+
+                    <div>
+                        <h4 class="fw-bold">@produto.Nome</h4>
+                        <p class="mb-0">Preço: @produto.Preco.ToString("C2") | Stock: @produto.Stock</p>
+                        <small class="text-muted">Categoria: @(produto.Categoria?.Nome ?? "-")</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-white border-top-0">
+                <EditForm Model="produto" OnValidSubmit="DeleteProduto" FormName="delete" Enhance>
+                    <button type="submit" class="btn btn-danger me-2" disabled="@(!string.IsNullOrEmpty(MensagemErro))">
+                        <img src="/img/deleteicon.png" style="height:20px" class="me-1" /> Sim, Apagar
+                    </button>
+                    <a href="/produtos" class="btn btn-secondary">
+                        <img src="/img/backicon.png" style="height:20px" class="me-1" /> Cancelar
+                    </a>
+                </EditForm>
+            </div>
         </div>
-
-        <dl class="row">
-            <dt class="col-sm-2">Nome</dt>
-            <dd class="col-sm-10">@produto.Nome</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Detalhe</dt>
-            <dd class="col-sm-10">@produto.Detalhe</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Origem</dt>
-            <dd class="col-sm-10">@produto.Origem</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Preço</dt>
-            <dd class="col-sm-10">@produto.Preco</dd>
-        </dl>
-
-        <dl class="row">
-            <dt class="col-sm-2">Stock</dt>
-            <dd class="col-sm-10">@produto.EmStock</dd>
-        </dl>
-
-
-        <dl class="row">
-            <dt class="col-sm-2">Categoria</dt>
-            <dd class="col-sm-10">@produto.categoria.Nome</dd>
-        </dl>
-        <EditForm method="post" Model="produto" OnValidSubmit="DeleteProduto" FormName="delete" Enhance>
-            <button type="submit" class="btn btn-danger" disabled="@(produto is null)" onclick="return confirm('Tem a certeza que deseja apagar este registo?')"><img title="Apagar" src="/img/deleteicon.png" style="height:30px" /></button> |
-            <a href="/produtos" type="button" class="btn btn-outline-secondary"><img title="Recuar" src="/img/backicon.png" style="height:30px" /></a>
-        </EditForm>
     }
 </div>
 
 @code {
-    Produto? produto;
-
     [SupplyParameterFromQuery]
     public int Id { get; set; }
+
+    private Produto? produto;
+    private string? MensagemErro;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        produto = await context.Produtos.Include("categoria")
+        produto = await context.Produtos
+            .Include(p => p.Categoria)
             .FirstOrDefaultAsync(m => m.Id == Id);
 
         if (produto is null)
@@ -88,31 +85,29 @@
 
     public async Task DeleteProduto()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Produtos.Remove(produto!);
-        await context.SaveChangesAsync();
-
-        await deleteImage(produto.Id, produto.UrlImagem);
-
-        NavigationManager.NavigateTo("/produtos");
-    }
-
-    public async Task deleteImage(int id, string image)
-    {
-        using var context = DbFactory.CreateDbContext();
-        var curso = await context.Produtos.FirstOrDefaultAsync(m => m.Id == id);
-
-        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Produtos/" + @produto.Id + "/" +image);
-
         try
         {
-            System.IO.File.Delete(filePath);
+            using var context = DbFactory.CreateDbContext();
 
+            bool temVendas = await context.DetalhesEncomenda.AnyAsync(d => d.ProdutoId == Id);
+
+            if (temVendas)
+            {
+                MensagemErro = "Não pode apagar este produto porque ele já faz parte de Encomendas passadas.";
+                return;
+            }
+
+            var prodParaApagar = await context.Produtos.FindAsync(Id);
+            if (prodParaApagar != null)
+            {
+                context.Produtos.Remove(prodParaApagar);
+                await context.SaveChangesAsync();
+                NavigationManager.NavigateTo("/produtos");
+            }
         }
         catch (Exception ex)
         {
-
+            MensagemErro = "Erro ao apagar: " + ex.Message;
         }
-
     }
 }

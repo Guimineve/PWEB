@@ -1,161 +1,140 @@
-﻿@page "/categoria/create"
-
-@* @attribute [Authorize(Roles = "Admin")] *@
-
-
-@using Microsoft.AspNetCore.Authorization
+﻿@page "/categorias/create"
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
 @using GestaoLoja.Data
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Criar</PageTitle>
+<PageTitle>Criar Categoria</PageTitle>
 
-<h1>Criar registo!</h1>
+<h1>Criar Nova Categoria</h1>
 
-<h4>Categoria</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="Categoria" OnValidSubmit="AddCategoria" enctype="multipart/form-data" FormName="create" Enhance>
+    <div class="col-md-6">
+        <EditForm Model="Categoria" OnValidSubmit="AddCategoria" FormName="create">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
 
             <div class="mb-3">
+                <label for="nome" class="form-label">Nome:</label>
+                <InputText id="nome" @bind-Value="Categoria.Nome" class="form-control" />
+                <ValidationMessage For="() => Categoria.Nome" class="text-danger" />
+            </div>
 
-                <div>
-                    @if (@Categoria.Imagem != null && @Categoria.Imagem.Length > 0)
+            <div class="mb-3">
+                <label for="pai" class="form-label">Categoria Pai:</label>
+                <InputSelect id="pai" @bind-Value="Categoria.CategoriaPaiId" class="form-select">
+                    <option value="">-- Nenhuma (Raiz) --</option>
+                    @foreach (var cat in ListaCategorias)
                     {
-                        <img title="@Categoria.Nome" id="imagePreview" class="img-thumbnail  mt-2" 
-                        src="Produtos\@Categoria.Imagem" style="width:100px;">
+                        <option value="@cat.Id">@cat.Nome</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Imagem:</label>
+
+                <div class="mb-2 p-2 border rounded text-center" style="width: 150px;">
+                    @if (PreviewImagem != null)
+                    {
+                        <img src="@PreviewImagem" class="img-fluid" style="max-height: 100px;">
                     }
                     else
                     {
-                        <img id="imagePreview" class="img-thumbnail mt-2" 
-                        src="img/noproductstrans.png" style="width:100px;">
+                        <img src="/img/noproductstrans.png" class="img-fluid" style="max-height: 100px; opacity: 0.5">
                     }
                 </div>
 
-                <label for="nome" class="form-label">Nome:</label> 
-                <InputText id="nome" @bind-Value="Categoria.Nome" class="form-control" /> 
-                <ValidationMessage For="() => Categoria.Nome" class="text-danger" /> 
-            </div>        
-        
-            <div class="mb-3">
-                <label for="ordem" class="form-label">Ordem na visualização:</label> 
-                <InputNumber id="ordem" @bind-Value="Categoria.Ordem" class="form-control" /> 
-                <ValidationMessage For="() => Categoria.Ordem" class="text-danger" /> 
-            </div>       
-            
-            <div class="mb-3">
-                <label for="imageUri" class="form-label">Imagem:</label>
-                <input id="imageUri"
-                       type="file"
-                       name="Categoria.ImageFile"
-                       class="form-control"
-                       accept=".png, .jpg, .jpeg"
-                       onchange="document.getElementById('imagePreview').src = 
-                       window.URL.createObjectURL(this.files[0])" />
+                <InputFile OnChange="CarregarImagem" class="form-control" accept=".png,.jpg,.jpeg" />
+
+                @if (!string.IsNullOrEmpty(ErroImagem))
+                {
+                    <div class="text-danger small mt-1">@ErroImagem</div>
+                }
             </div>
 
-            <button type="submit" class="btn btn-primary"><img title="Gravar" 
-                src="/img/saveicon.png" style="height:30px" /></button>
-
-            <a href="/categoria" type="button" class="btn btn-outline-secondary">
-                <img title="Recuar" src="/img/backicon.png" style="height:30px" /></a>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-link p-0 me-3" title="Gravar">
+                    <img src="/img/saveicon.png" style="height:30px" />
+                </button>
+                <a href="/categorias" class="btn btn-link p-0" title="Voltar">
+                    <img src="/img/backicon.png" style="height:30px" />
+                </a>
+            </div>
         </EditForm>
     </div>
 </div>
 
 @code {
-
     [SupplyParameterFromForm]
     public Categoria Categoria { get; set; } = new();
 
-    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    private List<Categoria> ListaCategorias = new();
+    private string? PreviewImagem;
+    private string? ErroImagem;
+
+    private byte[]? ImagemTemporaria;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        ListaCategorias = await context.Categorias.OrderBy(c => c.Nome).ToListAsync();
+    }
+
+    private async Task CarregarImagem(InputFileChangeEventArgs e)
+    {
+        ErroImagem = null;
+        var ficheiro = e.File;
+
+        if (ficheiro != null)
+        {
+            long maxTamanho = 1024 * 1024 * 5;
+            if (ficheiro.Size > maxTamanho)
+            {
+                ErroImagem = "A imagem é demasiado grande (Máx 5MB).";
+                return;
+            }
+
+            // Validar Tipo
+            if (!ficheiro.ContentType.StartsWith("image/"))
+            {
+                ErroImagem = "Por favor selecione uma imagem válida (PNG, JPG).";
+                return;
+            }
+
+            try
+            {
+                // Ler para Array de Bytes
+                using var stream = ficheiro.OpenReadStream(maxTamanho);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                ImagemTemporaria = ms.ToArray();
+
+                // Criar Preview
+                var base64 = Convert.ToBase64String(ImagemTemporaria);
+                PreviewImagem = $"data:{ficheiro.ContentType};base64,{base64}";
+            }
+            catch (Exception ex)
+            {
+                ErroImagem = "Erro ao ler imagem: " + ex.Message;
+            }
+        }
+    }
+
     public async Task AddCategoria()
     {
         using var context = DbFactory.CreateDbContext();
+
+        // Passar a imagem temporária para a entidade antes de gravar
+        if (ImagemTemporaria != null)
+        {
+            Categoria.Imagem = ImagemTemporaria;
+        }
+
         context.Categorias.Add(Categoria);
-
-        try
-        {
-            if (Categoria.ImageFile != null)
-            {
-                if (Categoria.ImageFile.Length > (200 * 1024))
-                {
-                    NavigationManager.NavigateTo("/categoria/edit");
-                }
-
-                if (!isValidFileType(Categoria.ImageFile.FileName))
-                {
-                    NavigationManager.NavigateTo("/categoria/edit");
-                }
-                else Categoria.UrlImagem = Categoria.ImageFile.FileName;
-
-                //Apaga img existente
-                //           await deleteImage(produto.Id, produto.UrlImagem);
-
-                using (var dataStream = new MemoryStream())
-                {
-                    await Categoria.ImageFile.CopyToAsync(dataStream);
-                    Categoria.Imagem = dataStream.ToArray();
-                }
-            }
-
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!CategoriaExists(Categoria!.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
-
-        NavigationManager.NavigateTo("/categoria");
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/categorias");
     }
-
-    bool isValidFileType(string fileName)
-    {
-        string ext = Path.GetExtension(fileName);
-        switch (ext.ToLower())
-        {
-            case ".jpg":
-                return true;
-            case ".jpeg":
-                return true;
-            case ".png":
-                return true;
-            default:
-                return false;
-        }
-    }
-    bool isValidFileType(IFormFile file)
-    {
-        string ext = Path.GetExtension(file.Name);
-        switch (ext.ToLower())
-        {
-            case ".jpg":
-                return true;
-            case ".jpeg":
-                return true;
-            case ".png":
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    bool CategoriaExists(int id)
-    {
-        using var context = DbFactory.CreateDbContext();
-        return context.Categorias.Any(e => e.Id == id);
-    }
-
 }

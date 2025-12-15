@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestaoLoja.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251207173930_BDInicial")]
-    partial class BDInicial
+    [Migration("20251219230324_AdicionarMargemLucro")]
+    partial class AdicionarMargemLucro
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,10 +33,6 @@ namespace GestaoLoja.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Apelido")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -48,8 +44,9 @@ namespace GestaoLoja.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<byte[]>("Fotografia")
-                        .HasColumnType("varbinary(max)");
+                    b.Property<string>("EstadoConta")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -57,12 +54,18 @@ namespace GestaoLoja.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("Morada")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<int>("NIF")
                         .HasColumnType("int");
 
                     b.Property<string>("Nome")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -112,20 +115,20 @@ namespace GestaoLoja.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CategoriaPaiId")
+                        .HasColumnType("int");
+
                     b.Property<byte[]>("Imagem")
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Ordem")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UrlImagem")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoriaPaiId");
 
                     b.ToTable("Categorias");
                 });
@@ -176,7 +179,8 @@ namespace GestaoLoja.Migrations
 
                     b.Property<string>("Estado")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("ValorTotal")
                         .HasColumnType("decimal(18, 2)");
@@ -197,12 +201,13 @@ namespace GestaoLoja.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Detalhe")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -224,12 +229,6 @@ namespace GestaoLoja.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Disponivel")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("EmStock")
-                        .HasColumnType("decimal(18, 2)");
-
                     b.Property<string>("EstadoAprovacao")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -240,8 +239,8 @@ namespace GestaoLoja.Migrations
                     b.Property<byte[]>("Imagem")
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<bool>("MaisVendido")
-                        .HasColumnType("bit");
+                    b.Property<decimal>("MargemLucro")
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<int>("ModoEntregaId")
                         .HasColumnType("int");
@@ -250,18 +249,18 @@ namespace GestaoLoja.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Origem")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal>("Preco")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<bool>("Promocao")
-                        .HasColumnType("bit");
+                    b.Property<decimal>("Stock")
+                        .HasColumnType("decimal(18, 2)");
 
-                    b.Property<string>("UrlImagem")
+                    b.Property<string>("Tipo")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Visivel")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -407,6 +406,15 @@ namespace GestaoLoja.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("GestaoLoja.Entities.Categoria", b =>
+                {
+                    b.HasOne("GestaoLoja.Entities.Categoria", "CategoriaPai")
+                        .WithMany("SubCategorias")
+                        .HasForeignKey("CategoriaPaiId");
+
+                    b.Navigation("CategoriaPai");
+                });
+
             modelBuilder.Entity("GestaoLoja.Entities.DetalheEncomenda", b =>
                 {
                     b.HasOne("GestaoLoja.Entities.Encomenda", "Encomenda")
@@ -439,7 +447,7 @@ namespace GestaoLoja.Migrations
 
             modelBuilder.Entity("GestaoLoja.Entities.Produto", b =>
                 {
-                    b.HasOne("GestaoLoja.Entities.Categoria", "categoria")
+                    b.HasOne("GestaoLoja.Entities.Categoria", "Categoria")
                         .WithMany("Produtos")
                         .HasForeignKey("CategoriaId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -449,17 +457,17 @@ namespace GestaoLoja.Migrations
                         .WithMany()
                         .HasForeignKey("FornecedorId");
 
-                    b.HasOne("GestaoLoja.Entities.ModoEntrega", "modoentrega")
-                        .WithMany()
+                    b.HasOne("GestaoLoja.Entities.ModoEntrega", "ModoEntrega")
+                        .WithMany("Produtos")
                         .HasForeignKey("ModoEntregaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Categoria");
+
                     b.Navigation("Fornecedor");
 
-                    b.Navigation("categoria");
-
-                    b.Navigation("modoentrega");
+                    b.Navigation("ModoEntrega");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -516,11 +524,18 @@ namespace GestaoLoja.Migrations
             modelBuilder.Entity("GestaoLoja.Entities.Categoria", b =>
                 {
                     b.Navigation("Produtos");
+
+                    b.Navigation("SubCategorias");
                 });
 
             modelBuilder.Entity("GestaoLoja.Entities.Encomenda", b =>
                 {
                     b.Navigation("Detalhes");
+                });
+
+            modelBuilder.Entity("GestaoLoja.Entities.ModoEntrega", b =>
+                {
+                    b.Navigation("Produtos");
                 });
 #pragma warning restore 612, 618
         }

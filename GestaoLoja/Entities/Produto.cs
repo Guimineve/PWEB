@@ -1,4 +1,5 @@
 ﻿using GestaoLoja.Data;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GestaoLoja.Entities
@@ -6,37 +7,46 @@ namespace GestaoLoja.Entities
     public class Produto
     {
         public int Id { get; set; }
-        public string Nome { get; set; }
-        public string Detalhe { get; set; }
-        public string Origem { get; set; }
 
+        [Required]
+        public string Nome { get; set; }
+
+        [Required]
+        public string Detalhe { get; set; }
+
+        [Required]
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Preco { get; set; }
 
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal EmStock { get; set; }
+        public decimal MargemLucro { get; set; }
 
-        public bool MaisVendido { get; set; }
-        public bool Disponivel { get; set; }
-        public bool Promocao { get; set; }
+        [Required]
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal Stock { get; set; }
 
-        public string? UrlImagem { get; set; }
         public byte[]? Imagem { get; set; }
 
         [NotMapped]
         public IFormFile? ImageFile { get; set; }
 
-        public int CategoriaId { get; set; }
-        public Categoria? categoria { get; set; }
-
-        public int ModoEntregaId { get; set; }
-        public ModoEntrega? modoentrega { get; set; }
+        public bool Visivel { get; set; }
 
         public string EstadoAprovacao { get; set; } = "Pendente";
 
-        public string? FornecedorId { get; set; }
+        [Required]
+        public string Tipo { get; set; }
 
+        // --- Relações ---
+
+        public int CategoriaId { get; set; }
+        public virtual Categoria? Categoria { get; set; }
+
+        public int ModoEntregaId { get; set; }
+        public virtual ModoEntrega? ModoEntrega { get; set; }
+
+        public string? FornecedorId { get; set; }
         [ForeignKey("FornecedorId")]
-        public ApplicationUser? Fornecedor { get; set; }
+        public virtual ApplicationUser? Fornecedor { get; set; }
     }
 }

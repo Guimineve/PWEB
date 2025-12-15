@@ -1,18 +1,26 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GestaoLoja.Entities
 {
     public class Categoria
     {
         public int Id { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public string Nome { get; set; }
-        public int Ordem { get; set; }
-        public string? UrlImagem { get; set; }
+
         public byte[]? Imagem { get; set; }
 
         [NotMapped]
         public IFormFile? ImageFile { get; set; }
 
-        public ICollection<Produto>? Produtos { get; set; }
+        public int? CategoriaPaiId { get; set; }
+        public virtual Categoria? CategoriaPai { get; set; }
+
+        public virtual ICollection<Categoria>? SubCategorias { get; set; }
+
+        public virtual ICollection<Produto>? Produtos { get; set; }
     }
 }

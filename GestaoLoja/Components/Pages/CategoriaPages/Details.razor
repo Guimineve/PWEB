@@ -1,64 +1,72 @@
-﻿@page "/categoria/details"
-
-@attribute [Authorize(Roles = "Admin, Gestor")]
-
-@using Microsoft.AspNetCore.Authorization
+﻿@page "/categorias/details"
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
 @using GestaoLoja.Data
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Detalhes</PageTitle>
+<PageTitle>Detalhes da Categoria</PageTitle>
 
-<h1>Detalhes do registo!</h1>
-
-<div>
-    <h4>Categoria</h4>
+<div class="container mt-4">
+    <h1>Detalhes</h1>
     <hr />
+
     @if (categoria is null)
     {
-        <p><em>Carregando...</em></p>
+        <p><em>A carregar...</em></p>
     }
-    else {
-        <dl class="row">
+    else
+    {
+        <div class="card shadow-sm" style="max-width: 600px;">
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Imagem</dt>
+                    <dd class="col-sm-8">
+                        @if (categoria.Imagem != null && categoria.Imagem.Length > 0)
+                        {
+                            <img src="data:image/png;base64,@(Convert.ToBase64String(categoria.Imagem))"
+                                 class="img-thumbnail" style="max-width: 200px;" />
+                        }
+                        else
+                        {
+                            <img src="/img/noproductstrans.png" class="img-thumbnail" style="max-width: 150px; opacity: 0.5" />
+                        }
+                    </dd>
 
-            <dd>    
-                <div>
-                    @if (categoria.Imagem is not null)
-                    {
-                        <img title="@categoria.Nome" id="imagePreview" class="img-thumbnail  mt-2" src="data:image/*;base64,@(Convert.ToBase64String(categoria.Imagem))" style="width:200px">
-                    }
-                    else
-                    {
-                        <img id="imagePreview" class="img-thumbnail mt-2" src="img/noproductstrans.png" style="width:50%;">
-                    }
+                    <dt class="col-sm-4 mt-3">Nome</dt>
+                    <dd class="col-sm-8 mt-3">@categoria.Nome</dd>
+
+                    <dt class="col-sm-4">Categoria Pai</dt>
+                    <dd class="col-sm-8">
+                        @(categoria.CategoriaPai != null ? categoria.CategoriaPai.Nome : "- Raiz -")
+                    </dd>
+                </dl>
+
+                <div class="mt-4">
+                    <a href="@($"/categorias/edit?id={categoria.Id}")" class="btn btn-primary me-2">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a href="/categorias" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
-            </dd>
-
-            <dt class="col-sm-2">Nome</dt>
-            <dd class="col-sm-10">@categoria.Nome</dd>
-
-            <dt class="col-sm-2">Ordem</dt>
-            <dd class="col-sm-10">@categoria.Ordem</dd>
-        </dl>
-        <div>
-            <a href="@($"/categoria/edit?id={categoria.Id}")"><img title="Editar" src="/img/editicon.png" style="height:30px" /></a> |
-            <a href="/categoria" type="button" class="btn btn-outline-secondary"><img title="Recuar" src="/img/backicon.png" style="height:30px" /></a>
+            </div>
         </div>
     }
 </div>
 
 @code {
-    Categoria? categoria;
-
     [SupplyParameterFromQuery]
     public int Id { get; set; }
+
+    private Categoria? categoria;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        categoria = await context.Categorias.FirstOrDefaultAsync(m => m.Id == Id);
+        categoria = await context.Categorias
+            .Include(c => c.CategoriaPai)
+            .FirstOrDefaultAsync(m => m.Id == Id);
 
         if (categoria is null)
         {
