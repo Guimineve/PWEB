@@ -1,164 +1,143 @@
-﻿@page "/Categoria/edit"
-
-@attribute [Authorize(Roles = "Admin")]
-
-@using Microsoft.AspNetCore.Authorization
+﻿@page "/categorias/edit"
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
 @using GestaoLoja.Data
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Editar</PageTitle>
+<PageTitle>Editar Categoria</PageTitle>
 
-<h1>Editar registo</h1>
+<h1>Editar Categoria</h1>
 
-<h4>Categoria</h4>
 <hr />
-@if (categoria is null)
+@if (Categoria is null)
 {
-    <p><em>Carregando...</em></p>
+    <p><em>A carregar...</em></p>
 }
 else
 {
     <div class="row">
-        <div class="col-md-4">
-            <EditForm method="post" Model="categoria" OnValidSubmit="UpdateCategoria" enctype="multipart/form-data" FormName="edit" Enhance>
+        <div class="col-md-6">
+            <EditForm Model="Categoria" OnValidSubmit="UpdateCategoria" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary />
-                <input type="hidden" name="categoria.Id" value="@categoria.Id" />
+                <ValidationSummary class="text-danger" />
+
+                <input type="hidden" name="Categoria.Id" value="@Categoria.Id" />
 
                 <div class="mb-3">
+                    <label for="nome" class="form-label">Nome:</label>
+                    <InputText id="nome" @bind-Value="Categoria.Nome" class="form-control" />
+                    <ValidationMessage For="() => Categoria.Nome" class="text-danger" />
+                </div>
 
-                    <div>
-                        @if (categoria.Imagem is not null)
+                <div class="mb-3">
+                    <label for="pai" class="form-label">Categoria Pai:</label>
+                    <InputSelect id="pai" @bind-Value="Categoria.CategoriaPaiId" class="form-select">
+                        <option value="">-- Nenhuma (Raiz) --</option>
+                        @foreach (var cat in ListaCategorias)
                         {
-                            <img title="Imagem Actual: @categoria.UrlImagem" id="imagePreview" class="img-thumbnail  mt-2" src="data:image/*;base64,@(Convert.ToBase64String(categoria.Imagem))" style="width:200px">
+                            if (cat.Id != Categoria.Id)
+                            {
+                                <option value="@cat.Id">@cat.Nome</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Imagem:</label>
+                    <div class="mb-2 p-2 border rounded text-center" style="width: 150px;">
+                        @if (PreviewImagem != null)
+                        {
+                            <img src="@PreviewImagem" class="img-fluid" style="max-height: 100px;">
                         }
                         else
                         {
-                            <img id="imagePreview" class="img-thumbnail mt-2" src="img/noproductstrans.png" style="width:200px;">
+                            <img src="/img/noproductstrans.png" class="img-fluid" style="max-height: 100px; opacity: 0.5">
                         }
                     </div>
-
-                    <label for="nome" class="form-label">Categoria:</label>
-                    <InputText id="nome" @bind-Value="categoria.Nome" class="form-control" />
-                    <ValidationMessage For="() => categoria.Nome" class="text-danger" />
+                    <InputFile OnChange="CarregarImagem" class="form-control" accept=".png,.jpg,.jpeg" />
                 </div>
 
-                <div class="mb-3">
-                    <label for="ordem" class="form-label">Ordem:</label>
-                    
-                    <InputNumber id="ordem" @bind-Value="categoria.Ordem" class="form-control" />
-                    <ValidationMessage For="() => categoria.Ordem" class="text-danger" />
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-link p-0 me-3" title="Gravar">
+                        <img src="/img/saveicon.png" style="height:30px" />
+                    </button>
+                    <a href="/categorias" class="btn btn-link p-0" title="Voltar">
+                        <img src="/img/backicon.png" style="height:30px" />
+                    </a>
                 </div>
-
-
-                <div class="mb-3">
-                    <label for="imageUri" class="form-label">Nova Imagem:</label>
-                    <input id="imageUri"
-                           type="file"
-                           name="categoria.ImageFile"
-                           class="form-control"
-                           accept=".png, .jpg, .jpeg"
-                           onchange="document.getElementById('imagePreview').src = window.URL.createObjectURL(this.files[0])" />                   
-                </div>
-
-                <button type="submit" class="btn btn-primary"><img title="Gravar" src="/img/saveicon.png" style="height:30px" /></button>
-                <a href="/categoria" type="button" class="btn btn-outline-secondary"><img title="Recuar" src="/img/backicon.png" style="height:30px" /></a>
             </EditForm>
         </div>
     </div>
 }
-
 
 @code {
     [SupplyParameterFromQuery]
     public int Id { get; set; }
 
     [SupplyParameterFromForm]
-    public Categoria? categoria { get; set; }
+    public Categoria? Categoria { get; set; }
 
-    public static string? uriActual;
+    private List<Categoria> ListaCategorias = new();
 
-    public static byte[]? imgActual { get; set; }
+    private string? PreviewImagem;
+    private byte[]? NovaImagemBytes;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
 
-        categoria ??= await context.Categorias
-        .FirstOrDefaultAsync(m => m.Id == Id);
+        Categoria ??= await context.Categorias.FirstOrDefaultAsync(m => m.Id == Id);
 
-        if (categoria is null)
+        if (Categoria is null)
         {
             NavigationManager.NavigateTo("notfound");
+            return;
         }
 
-        if (categoria!.UrlImagem is not null)
-        {
-            uriActual = categoria.UrlImagem;
-        }
-        if (categoria!.Imagem is not null)
-        {
-            imgActual = categoria.Imagem;
-        }
+        ListaCategorias = await context.Categorias.OrderBy(c => c.Nome).ToListAsync();
 
+        if (Categoria.Imagem != null && Categoria.Imagem.Length > 0)
+        {
+            var base64 = Convert.ToBase64String(Categoria.Imagem);
+            PreviewImagem = $"data:image/png;base64,{base64}";
+        }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see https://aka.ms/RazorPagesCRUD.
+    private async Task CarregarImagem(InputFileChangeEventArgs e)
+    {
+        var ficheiro = e.File;
+        if (ficheiro != null)
+        {
+            using var stream = ficheiro.OpenReadStream(1024 * 1024 * 5);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            NovaImagemBytes = ms.ToArray();
+
+            var base64 = Convert.ToBase64String(NovaImagemBytes);
+            PreviewImagem = $"data:{ficheiro.ContentType};base64,{base64}";
+        }
+    }
+
     public async Task UpdateCategoria()
     {
         using var context = DbFactory.CreateDbContext();
-        context.Attach(categoria!).State = EntityState.Modified;
+
+        context.Attach(Categoria!).State = EntityState.Modified;
+
+        if (NovaImagemBytes != null)
+        {
+            Categoria!.Imagem = NovaImagemBytes;
+        }
 
         try
         {
-
-            if (categoria.UrlImagem is null)
-                categoria.UrlImagem = uriActual;
-
-            if (categoria.Imagem is null)
-                categoria.Imagem = imgActual;
-
-            if (categoria.ImageFile != null)
-            {
-
-                if (categoria.ImageFile.Length > (200 * 1024))
-                {
-                    NavigationManager.NavigateTo("/categoria/edit");
-                }
-
-                if (!isValidFileType(categoria.ImageFile.FileName))
-                {
-                    NavigationManager.NavigateTo("/categoria/edit");
-                }
-                else categoria.UrlImagem = categoria.ImageFile.FileName;
-
-                //Apaga img existente
-                //           await deleteImage(produto.Id, produto.UrlImagem);
-
-                // using (var dataStream = new MemoryStream())
-                // {
-                //     await produto.ImageFile.CopyToAsync(dataStream);
-
-                // }
-
-                using (var dataStream = new MemoryStream())
-                {
-                    await categoria.ImageFile.CopyToAsync(dataStream);
-                    categoria.Imagem = dataStream.ToArray();
-                }
-
-            }
-
             await context.SaveChangesAsync();
-
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!CategoriaExists(categoria!.Id))
+            if (!CategoriaExists(Categoria!.Id))
             {
                 NavigationManager.NavigateTo("notfound");
             }
@@ -168,38 +147,7 @@ else
             }
         }
 
-        NavigationManager.NavigateTo("/categoria");
-    }
-
-    bool isValidFileType(string fileName)
-    {
-        string ext = Path.GetExtension(fileName);
-        switch (ext.ToLower())
-        {
-            case ".jpg":
-                return true;
-            case ".jpeg":
-                return true;
-            case ".png":
-                return true;
-            default:
-                return false;
-        }
-    }
-    bool isValidFileType(IFormFile file)
-    {
-        string ext = Path.GetExtension(file.Name);
-        switch (ext.ToLower())
-        {
-            case ".jpg":
-                return true;
-            case ".jpeg":
-                return true;
-            case ".png":
-                return true;
-            default:
-                return false;
-        }
+        NavigationManager.NavigateTo("/categorias");
     }
 
     bool CategoriaExists(int id)
@@ -207,24 +155,4 @@ else
         using var context = DbFactory.CreateDbContext();
         return context.Categorias.Any(e => e.Id == id);
     }
-
-    public async Task deleteImage(int id, string image)
-    {
-        using var context = DbFactory.CreateDbContext();
-        var curso = await context.Categorias.FirstOrDefaultAsync(m => m.Id == id);
-
-        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Categorias/" + categoria.Id + "/" + image);
-
-        try
-        {
-            System.IO.File.Delete(filePath);
-
-        }
-        catch (Exception ex)
-        {
-
-        }
-    }
 }
-
-

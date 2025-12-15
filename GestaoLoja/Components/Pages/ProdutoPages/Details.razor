@@ -1,88 +1,120 @@
 ﻿@page "/produtos/details"
-
-@attribute [Authorize(Roles = "Admin,Gestor")]
-
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
 @using GestaoLoja.Data
-@inject IDbContextFactory<GestaoLoja.Data.ApplicationDbContext> DbFactory
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Detalhes</PageTitle>
+<PageTitle>Detalhes do Produto</PageTitle>
 
-<h1>Detalhe do produto</h1>
-
-<div>
-    <h4>Produto</h4>
+<div class="container mt-4">
+    <h1>Detalhes do Produto</h1>
     <hr />
+
     @if (produto is null)
     {
-        <p><em>Carregando...</em></p>
+        <p><em>A carregar...</em></p>
     }
-    else {
-        
-            string MaisVende = "";
-            string EstaDisp = "";
-        
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        @if (produto.Imagem != null && produto.Imagem.Length > 0)
+                        {
+                            <img src="data:image/png;base64,@(Convert.ToBase64String(produto.Imagem))"
+                                 class="img-fluid rounded shadow-sm" style="max-height: 300px;" />
+                        }
+                        else
+                        {
+                            <img src="/img/noproductstrans.png" class="img-fluid" style="opacity: 0.5" />
+                        }
+                    </div>
 
-        @if (@produto.MaisVendido)
-        {
-            MaisVende = "Sim";
-        }
-        else
-        {
-            MaisVende = "Não";
-        }
+                    <div class="col-md-8">
+                        <dl class="row">
+                            <dt class="col-sm-3">Nome</dt>
+                            <dd class="col-sm-9 fw-bold">@produto.Nome</dd>
 
-        @if (@produto.Disponivel)
-        {
-            EstaDisp = "Sim";
-        }
-        else
-        {
-            EstaDisp = "Não";
-        }
+                            <dt class="col-sm-3">Preço</dt>
+                            <dd class="col-sm-9 text-success fw-bold">@produto.Preco.ToString("C2")</dd>
 
-        <dl class="row">
+                            <dt class="col-sm-3">Stock</dt>
+                            <dd class="col-sm-9">@produto.Stock unidades</dd>
 
-            <dd>    <img title="@produto.Nome" id="imagePreview" class="img-thumbnail  mt-2" src="data:image/*;base64,@(Convert.ToBase64String(produto.Imagem))" style="width:200px"></dd>
+                            <dt class="col-sm-3">Categoria</dt>
+                            <dd class="col-sm-9">@(produto.Categoria?.Nome ?? "-")</dd>
 
-            <dt class="col-sm-2">Nome</dt>
-            <dd class="col-sm-10">@produto.Nome</dd>
-            <dt class="col-sm-2">Detalhe</dt>
-            <dd class="col-sm-10">@produto.Detalhe</dd>
-            <dt class="col-sm-2">Preço</dt>
-            <dd class="col-sm-10">@produto.Preco €/@produto.modoentrega.Nome</dd>
-            <dt class="col-sm-2">Mais Vendido</dt>
-            <dd class="col-sm-10">@MaisVende</dd>
-            <dt class="col-sm-2">Stock</dt>
-            <dd class="col-sm-10">@produto.EmStock</dd>
-            <dt class="col-sm-2">Disponível</dt>
-            <dd class="col-sm-10">@EstaDisp</dd>
-            <dt class="col-sm-2">Modo Entrega</dt>
-            <dd class="col-sm-10">@produto.modoentrega.Nome</dd>
-            <dt class="col-sm-2">Categoria</dt>
-            <dd class="col-sm-10">@produto.categoria.Nome</dd>
-        </dl>
-        <div>
-            <a href="@($"/produtos/edit?id={produto.Id}")"><img title="Editar" src="/img/editicon.png" style="height:30px" /></a> |
-            <a href="/produtos" type="button" class="btn btn-outline-secondary"><img title="Recuar" src="/img/backicon.png" style="height:30px" /></a>
+                            <dt class="col-sm-3">Modo Entrega</dt>
+                            <dd class="col-sm-9">@(produto.ModoEntrega?.Nome ?? "-")</dd>
+
+                            <dt class="col-sm-3">Tipo</dt>
+                            <dd class="col-sm-9">@produto.Tipo</dd>
+
+                            <dt class="col-sm-3">Visibilidade</dt>
+                            <dd class="col-sm-9">
+                                @if (produto.Visivel)
+                                {
+                                    <span class="badge bg-success">Visível</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge bg-secondary">Oculto</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-3">Estado</dt>
+                            <dd class="col-sm-9">
+                                @if (produto.EstadoAprovacao == "Aprovado")
+                                {
+                                    <span class="text-success">Aprovado</span>
+                                }
+                                else if (produto.EstadoAprovacao == "Rejeitado")
+                                {
+
+                                    <span class="text-danger">Rejeitado</span>
+                                }
+                                else
+                                {
+
+                                    <span class="text-warning fw-bold">Pendente</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-3">Detalhe</dt>
+                            <dd class="col-sm-9 text-muted">@produto.Detalhe</dd>
+                        </dl>
+
+                        <div class="mt-4">
+                            <a href="@($"/produtos/edit?id={produto.Id}")" class="btn btn-primary me-2">
+                                <img src="/img/editicon.png" style="height:20px" class="me-1" /> Editar
+                            </a>
+                            <a href="/produtos" class="btn btn-secondary">
+                                <img src="/img/backicon.png" style="height:20px" class="me-1" /> Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 </div>
 
 @code {
-    Produto? produto;
-
     [SupplyParameterFromQuery]
     public int Id { get; set; }
+
+    private Produto? produto;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        produto = await context.Produtos.Include("categoria").Include("modoentrega")
-        .FirstOrDefaultAsync(m => m.Id == Id);
+        produto = await context.Produtos
+            .Include(p => p.Categoria)
+            .Include(p => p.ModoEntrega)
+            .FirstOrDefaultAsync(m => m.Id == Id);
 
         if (produto is null)
         {

@@ -53,6 +53,10 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 
 var app = builder.Build();
 
+var cultureInfo = new System.Globalization.CultureInfo("pt-PT");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
 //Need to add for data seeding start
 using (var scope = app.Services.CreateScope())
 {
@@ -62,7 +66,7 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await Initialization.CriaDadosIniciais(userManager, roleManager);
+        await Inicializacao.CriaDadosIniciais(userManager, roleManager);
         //Log.Information("Identity User Data Seeding finnished");
 
     }

@@ -1,4 +1,64 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+<header>
+    <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm py-2">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/" aria-label="Página inicial - GestãoLoja">
+                <span class="bi bi-shop fs-4" aria-hidden="true"></span>
+                <span class="fw-semibold">GestãoLoja</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbar" aria-controls="topNavbar" aria-expanded="false" aria-label="Alternar navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topNavbar">
+                <!-- Navegação principal -->
+                <ul class="navbar-nav me-auto mb-2 mb-md-0 align-items-center">
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="/sobre">About</NavLink>
+                    </li>
+                </ul>
+
+                <!-- Ações da conta -->
+                <div class="nav-actions d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 mt-2 mt-md-0 ms-md-auto" role="region" aria-label="Ações da conta">
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="nav-item px-3">
+                                <NavLink class="nav-link" href="Account/Manage">
+                                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+                                </NavLink>
+                            </div>
+
+                            <div class="nav-item px-3">
+                                <form action="/Account/Logout" method="post" class="m-0">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="" />
+                                    <button type="submit" class="nav-link btn btn-link p-0" aria-label="Logout">
+                                        <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="nav-item px-3">
+                                <NavLink class="nav-link" href="Account/Register">
+                                    <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
+                                </NavLink>
+                            </div>
+                            <div class="nav-item px-3">
+                                <NavLink class="nav-link" href="Account/Login">
+                                    <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
+                                </NavLink>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
 
 <div class="page">
     <div class="sidebar">
@@ -6,12 +66,8 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
+        <article class="content px-4 mt-3">
+            @Body <!--Todo o código gerado quando é feito login, mediante o perfil, vai ser injetado aqui-->
         </article>
     </main>
 </div>
@@ -21,3 +77,4 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+

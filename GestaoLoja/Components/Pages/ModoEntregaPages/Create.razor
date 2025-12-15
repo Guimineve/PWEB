@@ -1,49 +1,54 @@
-﻿@page "/modoentregas/create"
+﻿@page "/modosentrega/create"
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
-@inject IDbContextFactory<GestaoLoja.Data.ApplicationDbContext> DbFactory
+@using GestaoLoja.Data
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Create</PageTitle>
+<PageTitle>Criar Modo de Entrega</PageTitle>
 
-<h1>Create</h1>
-
-<h2>ModoEntrega</h2>
+<h1>Criar Novo Modo</h1>
 <hr />
+
 <div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="ModoEntrega" OnValidSubmit="AddModoEntrega" FormName="create" Enhance>
+    <div class="col-md-6">
+        <EditForm Model="ModoEntrega" OnValidSubmit="AddModo" FormName="create" Enhance>
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
+            <ValidationSummary class="text-danger" />
+
             <div class="mb-3">
-                <label for="nome" class="form-label">Nome:</label> 
-                <InputText id="nome" @bind-Value="ModoEntrega.Nome" class="form-control" /> 
-                <ValidationMessage For="() => ModoEntrega.Nome" class="text-danger" /> 
-            </div>        
+                <label for="nome" class="form-label">Nome:</label>
+                <InputText id="nome" @bind-Value="ModoEntrega.Nome" class="form-control" placeholder="Ex: CTT Expresso" />
+                <ValidationMessage For="() => ModoEntrega.Nome" class="text-danger" />
+            </div>
+
             <div class="mb-3">
-                <label for="detalhe" class="form-label">Detalhe:</label> 
-                <InputText id="detalhe" @bind-Value="ModoEntrega.Detalhe" class="form-control" /> 
-                <ValidationMessage For="() => ModoEntrega.Detalhe" class="text-danger" /> 
-            </div>        
-            <button type="submit" class="btn btn-primary">Create</button>
+                <label for="detalhe" class="form-label">Detalhe:</label>
+                <InputTextArea id="detalhe" @bind-Value="ModoEntrega.Detalhe" class="form-control" rows="3" placeholder="Descrição (Opcional)..." />
+                <ValidationMessage For="() => ModoEntrega.Detalhe" class="text-danger" />
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-link p-0 me-3" title="Gravar">
+                    <img src="/img/saveicon.png" style="height:30px" />
+                </button>
+                <a href="/modosentrega" class="btn btn-link p-0" title="Voltar">
+                    <img src="/img/backicon.png" style="height:30px" />
+                </a>
+            </div>
         </EditForm>
     </div>
 </div>
 
-<div>
-    <a href="/modoentregas">Back to List</a>
-</div>
-
 @code {
     [SupplyParameterFromForm]
-    private ModoEntrega ModoEntrega { get; set; } = new();
+    public ModoEntrega ModoEntrega { get; set; } = new();
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
-    private async Task AddModoEntrega()
+    public async Task AddModo()
     {
         using var context = DbFactory.CreateDbContext();
         context.ModosEntrega.Add(ModoEntrega);
         await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/modoentregas");
+        NavigationManager.NavigateTo("/modosentrega");
     }
 }

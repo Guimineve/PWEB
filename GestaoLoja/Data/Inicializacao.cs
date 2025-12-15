@@ -2,14 +2,14 @@
 
 namespace GestaoLoja.Data
 {
-    public static class Initialization
+    public static class Inicializacao
     {
         public static async Task CriaDadosIniciais(
             UserManager<ApplicationUser> userManager, 
             RoleManager<IdentityRole> roleManager)
         {
             //Adicionar as roles default
-            string[] roles = new[] { "Admin", "Gestor", "Cliente" };
+            string[] roles = new[] { "Admin", "Funcionario", "Cliente", "Fornecedor" };
 
             foreach (var role in roles)
             {
@@ -26,11 +26,14 @@ namespace GestaoLoja.Data
                 UserName = "admin@localhost.com",
                 Email = "admin@localhost.com",
                 Nome = "Administrador",
-                Apelido = "Local",
                 EmailConfirmed = true,
-                PhoneNumberConfirmed = true
+                PhoneNumberConfirmed = true,
+                NIF = 999999999,
+                Morada = "Loja",
+                EstadoConta = "Ativo"
             };
-            //validação se o Id já existe
+
+            //validação da criação
             if (userManager.Users.All(u => u.Id != defaultUser.Id))
             {
                 var user = await userManager.FindByEmailAsync(defaultUser.Email);

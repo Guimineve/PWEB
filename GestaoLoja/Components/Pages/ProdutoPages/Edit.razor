@@ -1,112 +1,133 @@
 ﻿@page "/produtos/edit"
-
-@* @attribute [Authorize(Roles = "Admin")] *@
-
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
 @using GestaoLoja.Data
-@inject IDbContextFactory<GestaoLoja.Data.ApplicationDbContext> DbFactory
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Editar</PageTitle>
+<PageTitle>Editar Produto</PageTitle>
 
-<h1>Editar este registo</h1>
-
-<h4>Produto</h4>
+<h1>Editar Produto</h1>
 <hr />
-@if (produto is null)
+
+@if (Produto is null)
 {
-    <p><em>Carregando...</em></p>
+    <p><em>A carregar...</em></p>
 }
 else
 {
     <div class="row">
-        <div class="col-md-4">
-            <EditForm method="post" Model="produto" OnValidSubmit="UpdateProduto" enctype="multipart/form-data" FormName="edit" Enhance>
+        <div class="col-md-8">
+            <EditForm Model="Produto" OnValidSubmit="UpdateProduto" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary />
-                <input type="hidden" name="produto.Id" value="@produto.Id" />
-                    <div class="mb-3">
-                        <div>                   
-                            @if (@produto.Imagem != null && @produto.Imagem.Length > 0)
+                <ValidationSummary class="text-danger" />
+
+                <input type="hidden" name="Produto.Id" value="@Produto.Id" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Nome:</label>
+                            <InputText @bind-Value="Produto.Nome" class="form-control" />
+                            <ValidationMessage For="() => Produto.Nome" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Detalhe:</label>
+                            <InputTextArea @bind-Value="Produto.Detalhe" class="form-control" rows="3" />
+                            <ValidationMessage For="() => Produto.Detalhe" class="text-danger" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Preço (€):</label>
+                                <InputNumber @bind-Value="Produto.Preco" class="form-control" />
+                                <ValidationMessage For="() => Produto.Preco" class="text-danger" />
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Stock:</label>
+                                <InputNumber @bind-Value="Produto.Stock" class="form-control" />
+                                <ValidationMessage For="() => Produto.Stock" class="text-danger" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Negócio:</label>
+                            <InputSelect @bind-Value="Produto.Tipo" class="form-select">
+                                <option value="">-- Selecione --</option>
+                                <option value="Venda">Venda</option>
+                                <option value="Aluguer">Aluguer</option>
+                            </InputSelect>
+                            <ValidationMessage For="() => Produto.Tipo" class="text-danger" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Categoria:</label>
+                            <InputSelect @bind-Value="Produto.CategoriaId" class="form-select">
+                                <option value="0">-- Selecione --</option>
+                                @foreach (var cat in ListaCategorias)
+                                {
+                                    <option value="@cat.Id">@cat.Nome</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Modo de Entrega:</label>
+                            <InputSelect @bind-Value="Produto.ModoEntregaId" class="form-select">
+                                <option value="0">-- Selecione --</option>
+                                @foreach (var modo in ListaModos)
+                                {
+                                    <option value="@modo.Id">@modo.Nome</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="mb-3 form-check form-switch">
+                            <InputCheckbox @bind-Value="Produto.Visivel" class="form-check-input" id="visivel" />
+                            <label class="form-check-label" for="visivel">Visível na Loja</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Estado Aprovação:</label>
+                            <InputSelect @bind-Value="Produto.EstadoAprovacao" class="form-select">
+                                <option value="Pendente">Pendente</option>
+                                <option value="Aprovado">Aprovado</option>
+                                <option value="Rejeitado">Rejeitado</option>
+                            </InputSelect>
+                        </div>
+
+                        <div class="mb-3 p-3 border rounded bg-light">
+                            <label class="form-label fw-bold">Imagem:</label>
+                            <div class="text-center mb-2">
+                                @if (PreviewImagem != null)
+                                {
+                                    <img src="@PreviewImagem" class="img-fluid rounded" style="max-height: 150px;">
+                                }
+                                else
+                                {
+                                    <img src="/img/noproductstrans.png" class="img-fluid" style="max-height: 100px; opacity: 0.5">
+                                }
+                            </div>
+                            <InputFile OnChange="CarregarImagem" class="form-control" accept=".png,.jpg,.jpeg" />
+                            @if (!string.IsNullOrEmpty(ErroImagem))
                             {
-                                <img title="Imagem Actual: @produto.UrlImagem" id="imagePreview" class="img-thumbnail  mt-2" src="data:image/*;base64,@(Convert.ToBase64String(produto.Imagem))" style="width:200px">
-                            }
-                            else
-                            {
-                                <img id="imagePreview" class="img-thumbnail mt-2" src="img/noproductstrans.png" style="width:50%;">
+                                <div class="text-danger small mt-1">@ErroImagem</div>
                             }
                         </div>
-                        <label for="nome" class="form-label">Nome:</label>
-                        <InputText id="nome" @bind-Value="produto.Nome" class="form-control" />
-                        <ValidationMessage For="() => produto.Nome" class="text-danger" />
-
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="detalhe" class="form-label">Detalhe:</label>
-                        <InputText id="detalhe" @bind-Value="produto.Detalhe" class="form-control" />
-                        <ValidationMessage For="() => produto.Detalhe" class="text-danger" />
+                </div>
 
-                        <label for="origem" class="form-label">Origem:</label>
-                        <InputText id="origem" @bind-Value="produto.Origem" class="form-control" />
-                        <ValidationMessage For="() => produto.Origem" class="text-danger" />
-                    </div>
-                    <div class="mb-2">
-                        <label for="preco" class="form-label">Preço:</label>
-                
-                            <InputNumber id="preco" @bind-Value="produto.Preco" class="form-control" />
-                    
-                        <ValidationMessage For="() => produto.Preco" class="text-danger" />
-
-                        <label for="emstock" class="form-label">Stock:</label>
-                        <InputNumber id="emstock" @bind-Value="produto.EmStock" class="form-control" />
-                        <ValidationMessage For="() => produto.EmStock" class="text-danger" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="disponivel" class="form-label">Disponível:</label>
-                        <InputCheckbox id="disponivel" @bind-Value="produto.Disponivel" class="form-check-input" />
-                        <ValidationMessage For="() => produto.Disponivel" class="text-danger" />
-
-                        <label for="maisvendido" class="form-label"> Mais Vendido:</label>
-                        <InputCheckbox id="maisvendido" @bind-Value="produto.MaisVendido" class="form-check-input" />
-                        <ValidationMessage For="() => produto.MaisVendido" class="text-danger" />
-                    </div>
-
-                    <div class="mb-3">
-                         <label for="categoria" class="form-label">Disponibilização Actual: @modoActual</label>
-                        <InputSelect id="modosEntrega" class="form-group" @bind-Value="@produto.ModoEntregaId">
-                            <option value="-1">Disponibilização</option>
-                            @foreach (var item in selModo)
-                            {
-                                <option value="@item.Id ">@item.Nome</option>
-                            }
-                        </InputSelect>
-
-                        <label for="categoria" class="form-label">Categoria Actual:@catActual</label>
-                        <InputSelect id="categoria" class="form-group" @bind-Value="@produto.CategoriaId">
-                            <option value="-1">Categoria</option>
-                            @foreach (var item in selCategorias)
-                            {
-                                <option value="@item.Id ">@item.Nome</option>
-                            }
-                        </InputSelect>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="imageUri" class="form-label">Nova Imagem:</label>
-                        <input id="imageUri"
-                               type="file"
-                               name="Produto.ImageFile"
-                               class="form-control"
-                               accept=".png, .jpg, .jpeg"
-                               onchange="document.getElementById('imagePreview').src = window.URL.createObjectURL(this.files[0])" />
-                    </div>
-
-                <button type="submit" class="btn btn-primary"><img title="Gravar" src="/img/saveicon.png" style="height:30px" /></button>
-                <a href="/produtos" type="button" class="btn btn-outline-secondary"><img title="Recuar" src="/img/backicon.png" style="height:30px" /></a>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-link p-0 me-3" title="Gravar">
+                        <img src="/img/saveicon.png" style="height:40px" />
+                    </button>
+                    <a href="/produtos" class="btn btn-link p-0" title="Voltar">
+                        <img src="/img/backicon.png" style="height:40px" />
+                    </a>
+                </div>
             </EditForm>
         </div>
     </div>
@@ -117,186 +138,101 @@ else
     public int Id { get; set; }
 
     [SupplyParameterFromForm]
-    public Produto? produto { get; set; }
+    public Produto? Produto { get; set; }
 
-    List<Categoria> selCategorias = new List<Categoria>();
+    private List<Categoria> ListaCategorias = new();
+    private List<ModoEntrega> ListaModos = new();
 
-    List<ModoEntrega> selModo = new();
-
-    public static string? modoActual;
-    public static string? catActual;
-
-    public static string? uriActual;
-
-    public static int? modoActualId;
-    public static int catActualId;
-
-    public static byte[]? imgActual { get; set; }
+    private string? PreviewImagem;
+    private string? ErroImagem;
+    private byte[]? NovaImagemBytes;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
 
-        produto ??= await context.Produtos.Include("categoria").Include("modoentrega")
-        .FirstOrDefaultAsync(m => m.Id == Id);
+        Produto ??= await context.Produtos.FirstOrDefaultAsync(m => m.Id == Id);
 
-        if (produto is null)
+        if (Produto is null)
         {
             NavigationManager.NavigateTo("notfound");
+            return;
         }
 
-        selCategorias = context.Categorias
-                               .OrderBy(x => x.Ordem)
-                                .ToList();
+        ListaCategorias = await context.Categorias.OrderBy(c => c.Nome).ToListAsync();
+        ListaModos = await context.ModosEntrega.OrderBy(m => m.Nome).ToListAsync();
 
-        selModo = context.ModosEntrega
-                    .OrderBy(x => x.Nome)
-                    .ToList();
-
-        if (produto.ModoEntregaId < 0)
+        if (Produto.Imagem != null && Produto.Imagem.Length > 0)
         {
-            produto.ModoEntregaId = modoActualId ?? 0;
+            var base64 = Convert.ToBase64String(Produto.Imagem);
+            PreviewImagem = $"data:image/png;base64,{base64}";
         }
-
-        if (produto.CategoriaId < 0)
-            produto.CategoriaId = catActualId;
-
-        if (produto!.modoentrega is not null)
-        {
-            modoActual = produto.modoentrega.Nome;
-        }
-
-        if (produto!.categoria is not null)
-        {
-            catActual = produto.categoria.Nome;
-        }
-
-        if (produto!.UrlImagem is not null)
-        {
-            uriActual = produto.UrlImagem;
-        }
-
-        if (produto!.Imagem is not null)
-        {
-            imgActual = produto.Imagem;
-        }
-        
-        modoActualId = produto.ModoEntregaId;
-
-        catActualId = produto.CategoriaId;
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see https://aka.ms/RazorPagesCRUD.
+    private async Task CarregarImagem(InputFileChangeEventArgs e)
+    {
+        ErroImagem = null;
+        var ficheiro = e.File;
+        if (ficheiro != null)
+        {
+            if (ficheiro.Size > 1024 * 1024 * 5)
+            {
+                ErroImagem = "Imagem demasiado grande.";
+                return;
+            }
+
+            try
+            {
+                using var stream = ficheiro.OpenReadStream(1024 * 1024 * 5);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                NovaImagemBytes = ms.ToArray();
+                PreviewImagem = $"data:{ficheiro.ContentType};base64,{Convert.ToBase64String(NovaImagemBytes)}";
+            }
+            catch (Exception ex) { ErroImagem = ex.Message; }
+        }
+    }
+
     public async Task UpdateProduto()
     {
         using var context = DbFactory.CreateDbContext();
-        context.Attach(produto!).State = EntityState.Modified;
 
-        try
+        // Produto da Base de Dados
+        var produtoNaBD = await context.Produtos.FindAsync(Produto!.Id);
+
+        if (produtoNaBD is null)
         {
-            if (produto.CategoriaId == 0)
-                produto.CategoriaId = catActualId;
-
-            if (produto.ModoEntregaId == 0)
-                produto.ModoEntregaId = modoActualId ?? 0;
-
-            if (produto.UrlImagem is null)
-                produto.UrlImagem = uriActual;
-
-            if (produto.Imagem is null)
-                produto.Imagem = imgActual;
-
-            if (produto.ImageFile != null)
-            {
-                if (produto.ImageFile.Length > (200 * 1024))
-                {
-                    NavigationManager.NavigateTo("/produtos/edit");
-                }
-
-                if (!isValidFileType(produto.ImageFile.FileName))
-                {
-                    NavigationManager.NavigateTo("/produtos/edit");
-                }
-                else produto.UrlImagem = produto.ImageFile.FileName;
-
-                //Apaga img existente
-                await deleteImage(produto.Id, produto.UrlImagem);
-
-                using (var dataStream = new MemoryStream())
-                {
-                    await produto.ImageFile.CopyToAsync(dataStream);
-                    produto.Imagem = dataStream.ToArray();
-                }         
-             }
-
-            await context.SaveChangesAsync();
+            NavigationManager.NavigateTo("notfound");
+            return;
         }
-        catch (DbUpdateConcurrencyException)
+
+        // Atualizar os dados
+        produtoNaBD.Nome = Produto.Nome;
+        produtoNaBD.Detalhe = Produto.Detalhe;
+        produtoNaBD.Preco = Produto.Preco;
+        produtoNaBD.Stock = Produto.Stock;
+        produtoNaBD.Tipo = Produto.Tipo;
+        produtoNaBD.Visivel = Produto.Visivel;
+        produtoNaBD.EstadoAprovacao = Produto.EstadoAprovacao;
+
+        // Atualizar as Chaves Estrangeiras
+        produtoNaBD.CategoriaId = Produto.CategoriaId;
+        produtoNaBD.ModoEntregaId = Produto.ModoEntregaId;
+
+        // Atualizar Imagem
+        if (NovaImagemBytes != null)
         {
-            if (!ProdutoExists(produto!.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
+            produtoNaBD.Imagem = NovaImagemBytes;
         }
+
+        // Gravar
+        await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/produtos");
-    }
-
-    bool isValidFileType(string fileName)
-    {
-        string ext = Path.GetExtension(fileName);
-        switch (ext.ToLower())
-        {
-            case ".jpg":
-                return true;
-            case ".jpeg":
-                return true;
-            case ".png":
-                return true;
-            default:
-                return false;
-        }
-    }
-    bool isValidFileType(IFormFile file)
-    {
-        string ext = Path.GetExtension(file.Name);
-        switch (ext.ToLower())
-        {
-            case ".jpg":
-                return true;
-            case ".jpeg":
-                return true;
-            case ".png":
-                return true;
-            default:
-                return false;
-        }
     }
 
     bool ProdutoExists(int id)
     {
         using var context = DbFactory.CreateDbContext();
         return context.Produtos.Any(e => e.Id == id);
-    }
-
-    public async Task deleteImage(int id, string image)
-    {
-        using var context = DbFactory.CreateDbContext();
-        var curso = await context.Produtos.FirstOrDefaultAsync(m => m.Id == id);
-
-        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Produtos/" + @produto.Id + "/" + image);
-
-        try
-        {
-            System.IO.File.Delete(filePath);
-        }
-        catch (Exception ex)
-        {
-
-        }
     }
 }
