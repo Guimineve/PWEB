@@ -1,0 +1,170 @@
+﻿@page "/utilizadores/edit"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using GestaoLoja.Data
+@using GestaoLoja.Entities
+@using System.Security.Claims
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin,Funcionario")]
+
+<PageTitle>Editar Utilizador</PageTitle>
+
+<h1>Editar Utilizador</h1>
+<hr />
+
+@if (TargetUser is null)
+{
+    <p><em>A carregar...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <EditForm Model="TargetUser" OnValidSubmit="GravarAlteracoes">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="text-center mb-4">
+                                    <img src="/img/icoperfil.png" class="img-fluid rounded-circle shadow-sm" style="max-height: 100px; opacity: 0.8;" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Email</label>
+                                    <input type="text" class="form-control bg-light" value="@TargetUser.Email" disabled />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Nome Completo</label>
+                                    <InputText @bind-Value="TargetUser.Nome" class="form-control" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">NIF</label>
+                                    <InputNumber @bind-Value="TargetUser.NIF" class="form-control" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Morada</label>
+                                    <InputTextArea @bind-Value="TargetUser.Morada" class="form-control" rows="2" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 border-start ps-4">
+                                <h5 class="text-primary mb-3">Gestão de Conta</h5>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Estado da Conta</label>
+                                    <InputSelect @bind-Value="TargetUser.EstadoConta" class="form-select">
+                                        <option value="Pendente">Pendente</option>
+                                        <option value="Ativo">Ativo</option>
+                                        <option value="Inativo">Inativo</option>
+                                    </InputSelect>
+                                </div>
+
+                                <hr />
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold mb-2">Perfis / Funções</label>
+
+                                    @foreach (var item in RolesParaEscolha)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   @bind="item.IsSelected" id="role_@item.RoleName">
+                                            <label class="form-check-label" for="role_@item.RoleName">
+                                                @item.RoleName
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-link p-0 me-3" title="Gravar">
+                                <img src="/img/saveicon.png" style="height:40px" />
+                            </button>
+                            <a href="/utilizadores" class="btn btn-link p-0" title="Voltar">
+                                <img src="/img/backicon.png" style="height:40px" />
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    public string Id { get; set; } = "";
+
+    private ApplicationUser? TargetUser;
+    private bool EuSouAdmin = false;
+
+    public class RoleSelection
+    {
+        public string RoleName { get; set; } = "";
+        public bool IsSelected { get; set; }
+    }
+    private List<RoleSelection> RolesParaEscolha = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        EuSouAdmin = authState.User.IsInRole("Admin");
+
+        TargetUser = await UserManager.FindByIdAsync(Id);
+        if (TargetUser == null) { NavigationManager.NavigateTo("notfound"); return; }
+
+        // Roles atuais do utilizador
+        var userRoles = await UserManager.GetRolesAsync(TargetUser);
+
+        bool alvoEChefe = userRoles.Any(r => r == "Admin" || r == "Funcionario");
+        if (!EuSouAdmin && alvoEChefe)
+        {
+            NavigationManager.NavigateTo("/utilizadores");
+            return;
+        }
+
+        // Lista de opções
+        var todosRolesPossiveis = new List<string>();
+
+        if (EuSouAdmin)
+            todosRolesPossiveis = new List<string> { "Admin", "Funcionario", "Cliente", "Fornecedor" };
+        else
+            todosRolesPossiveis = new List<string> { "Cliente", "Fornecedor" };
+
+        foreach (var role in todosRolesPossiveis)
+        {
+            RolesParaEscolha.Add(new RoleSelection
+            {
+                RoleName = role,
+                IsSelected = userRoles.Contains(role)
+            });
+        }
+    }
+
+    private async Task GravarAlteracoes()
+    {
+        if (TargetUser == null) return;
+
+        await UserManager.UpdateAsync(TargetUser);
+
+        var rolesAtuaisNaBD = await UserManager.GetRolesAsync(TargetUser);
+
+        var rolesSelecionadosNaUI = RolesParaEscolha.Where(r => r.IsSelected).Select(r => r.RoleName).ToList();
+
+        var paraAdicionar = rolesSelecionadosNaUI.Except(rolesAtuaisNaBD).ToList();
+        var paraRemover = rolesAtuaisNaBD.Except(rolesSelecionadosNaUI).ToList();
+
+        if (paraAdicionar.Any()) await UserManager.AddToRolesAsync(TargetUser, paraAdicionar);
+        if (paraRemover.Any()) await UserManager.RemoveFromRolesAsync(TargetUser, paraRemover);
+
+        NavigationManager.NavigateTo("/utilizadores");
+    }
+}

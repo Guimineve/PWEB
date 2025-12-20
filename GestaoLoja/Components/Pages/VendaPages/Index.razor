@@ -1,4 +1,7 @@
 ﻿@page "/vendas"
+
+@attribute [Authorize(Roles = "Admin,Funcionario")]
+
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
 @using GestaoLoja.Data
@@ -10,14 +13,6 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="m-0 fw-bold text-primary">Gestão de Vendas</h3>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="m-0 fw-bold text-primary">Gestão de Vendas</h3>
-
-        <button class="btn btn-warning shadow-sm" @onclick="GerarVendasTeste">
-            <i class="bi bi-magic"></i> Gerar Dados de Teste
-        </button>
     </div>
 
     <div class="card bg-light border-0 mb-4">
@@ -205,70 +200,4 @@
     private async Task ProximaPagina() { if (PaginaAtual < TotalPaginas) { PaginaAtual++; await CarregarDados(); } }
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
-
-    private async Task GerarVendasTeste()
-    {
-        // 1. Validar se existem condições para criar vendas
-        var produtos = await context.Produtos.ToListAsync();
-        var user = await context.Users.FirstOrDefaultAsync(); // Usa o primeiro user (Admin)
-
-        if (!produtos.Any())
-        {
-            // O ideal era mostrar uma mensagem de erro, mas para teste basta não fazer nada
-            return;
-        }
-
-        if (user == null) return;
-
-        // 2. Criar uma Encomenda "Pendente" (Simular carrinho abandonado ou por pagar)
-        var encomenda1 = new Encomenda
-        {
-            ClienteId = user.Id,
-            Data = DateTime.Now,
-            Estado = "Pendente",
-            Detalhes = new List<DetalheEncomenda>()
-        };
-
-        // Adiciona 2 produtos aleatórios à encomenda
-        var prod1 = produtos.First();
-        var detalhe1 = new DetalheEncomenda
-        {
-            ProdutoId = prod1.Id,
-            PrecoUnitario = prod1.Preco,
-            Quantidade = 2
-        };
-        encomenda1.Detalhes.Add(detalhe1);
-
-        // Calcula total
-        encomenda1.ValorTotal = detalhe1.PrecoUnitario * detalhe1.Quantidade;
-
-        // 3. Criar uma Encomenda "Paga" (Pronta a expedir)
-        // Se tiveres mais produtos, usa o segundo, senão usa o mesmo
-        var prod2 = produtos.Count > 1 ? produtos[1] : produtos.First();
-
-        var encomenda2 = new Encomenda
-        {
-            ClienteId = user.Id,
-            Data = DateTime.Now.AddDays(-1), // Ontem
-            Estado = "Paga",
-            Detalhes = new List<DetalheEncomenda>()
-        };
-
-        var detalhe2 = new DetalheEncomenda
-        {
-            ProdutoId = prod2.Id,
-            PrecoUnitario = prod2.Preco,
-            Quantidade = 1
-        };
-        encomenda2.Detalhes.Add(detalhe2);
-        encomenda2.ValorTotal = detalhe2.PrecoUnitario * detalhe2.Quantidade;
-
-        // 4. Guardar na BD
-        context.Encomendas.Add(encomenda1);
-        context.Encomendas.Add(encomenda2);
-        await context.SaveChangesAsync();
-
-        // 5. Atualizar a lista visualmente
-        await CarregarDados();
-    }
 }

@@ -27,21 +27,43 @@
             <h2>Create a new account.</h2>
             <hr />
             <ValidationSummary class="text-danger" role="alert" />
+
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label for="email">Email</label>
                 <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Nome" class="form-control" placeholder="Nome Completo" />
+                <label>Nome Completo</label>
+                <ValidationMessage For="() => Input.Nome" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputNumber @bind-Value="Input.NIF" class="form-control" placeholder="NIF" />
+                <label>NIF</label>
+                <ValidationMessage For="() => Input.NIF" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Morada" class="form-control" placeholder="Morada Completa" />
+                <label>Morada</label>
+                <ValidationMessage For="() => Input.Morada" class="text-danger" />
+            </div>
+
             <div class="form-floating mb-3">
                 <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label for="password">Password</label>
                 <ValidationMessage For="() => Input.Password" class="text-danger" />
             </div>
+
             <div class="form-floating mb-3">
                 <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <label for="confirm-password">Confirm Password</label>
                 <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
             </div>
+
             <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </EditForm>
     </div>
@@ -69,9 +91,15 @@
     {
         var user = CreateUser();
 
+        user.Nome = Input.Nome;
+        user.NIF = Input.NIF;
+        user.Morada = Input.Morada;
+        user.EstadoConta = "Pendente";
+
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
@@ -79,6 +107,8 @@
             identityErrors = result.Errors;
             return;
         }
+
+        await UserManager.AddToRoleAsync(user, "Cliente");
 
         Logger.LogInformation("User created a new account with password.");
 
@@ -130,6 +160,18 @@
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
+
+        [Required]
+        [Display(Name = "Nome Completo")]
+        public string Nome { get; set; } = "";
+
+        [Required]
+        [Display(Name = "NIF")]
+        public int NIF { get; set; }
+
+        [Required]
+        [Display(Name = "Morada")]
+        public string Morada { get; set; } = "";
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]

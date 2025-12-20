@@ -19,15 +19,36 @@
         <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
+
             <div class="form-floating mb-3">
                 <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
                 <label for="username" class="form-label">Username</label>
             </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Nome" class="form-control" placeholder="Nome Completo" />
+                <label for="nome" class="form-label">Nome Completo</label>
+                <ValidationMessage For="() => Input.Nome" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputNumber @bind-Value="Input.NIF" class="form-control" placeholder="NIF" />
+                <label for="nif" class="form-label">NIF</label>
+                <ValidationMessage For="() => Input.NIF" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Morada" class="form-control" placeholder="Morada" />
+                <label for="morada" class="form-label">Morada</label>
+                <ValidationMessage For="() => Input.Morada" class="text-danger" />
+            </div>
+
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
                 <label for="phone-number" class="form-label">Phone number</label>
                 <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
             </div>
+
             <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
         </EditForm>
     </div>
@@ -51,21 +72,50 @@
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
 
         Input.PhoneNumber ??= phoneNumber;
+        Input.Nome ??= user.Nome;
+        Input.NIF = user.NIF == 0 ? Input.NIF : user.NIF;
+        Input.Morada ??= user.Morada;
     }
 
     private async Task OnValidSubmitAsync()
     {
+        bool houveAlteracoes = false;
+
         if (Input.PhoneNumber != phoneNumber)
         {
             var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
             if (!setPhoneResult.Succeeded)
             {
                 RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+                return;
             }
+            houveAlteracoes = true;
         }
 
-        await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+        if (Input.Nome != user.Nome || Input.NIF != user.NIF || Input.Morada != user.Morada)
+        {
+            user.Nome = Input.Nome;
+            user.NIF = Input.NIF;
+            user.Morada = Input.Morada;
+
+            var updateResult = await UserManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update profile details.", HttpContext);
+                return;
+            }
+            houveAlteracoes = true;
+        }
+
+        if (houveAlteracoes)
+        {
+            await SignInManager.RefreshSignInAsync(user);
+            RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+        }
+        else
+        {
+            RedirectManager.RedirectToCurrentPageWithStatus("No changes were made.", HttpContext);
+        }
     }
 
     private sealed class InputModel
@@ -73,5 +123,14 @@
         [Phone]
         [Display(Name = "Phone number")]
         public string? PhoneNumber { get; set; }
+
+        [Display(Name = "Nome Completo")]
+        public string? Nome { get; set; }
+
+        [Display(Name = "NIF")]
+        public int NIF { get; set; }
+
+        [Display(Name = "Morada")]
+        public string? Morada { get; set; }
     }
 }

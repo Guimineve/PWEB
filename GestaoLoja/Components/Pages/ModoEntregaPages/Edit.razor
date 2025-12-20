@@ -1,4 +1,7 @@
 ﻿@page "/modosentrega/edit"
+
+@attribute [Authorize(Roles = "Admin,Funcionario")]
+
 @using Microsoft.EntityFrameworkCore
 @using GestaoLoja.Entities
 @using GestaoLoja.Data

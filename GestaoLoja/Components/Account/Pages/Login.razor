@@ -9,6 +9,7 @@
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject UserManager<ApplicationUser> UserManager
 
 <PageTitle>Log in</PageTitle>
 
@@ -55,13 +56,6 @@
             </EditForm>
         </section>
     </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
-    </div>
 </div>
 
 @code {
@@ -92,6 +86,28 @@
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
+            var user = await UserManager.FindByEmailAsync(Input.Email);
+            if (user != null)
+            {
+                // Verifica se é Admin ou Funcionário
+                bool isStaff = await UserManager.IsInRoleAsync(user, "Admin")
+                               || await UserManager.IsInRoleAsync(user, "Funcionario");
+
+                if (!isStaff)
+                {
+                    Logger.LogWarning("Cliente {Email} tentou entrar na área de gestão.", Input.Email);
+                    await SignInManager.SignOutAsync();
+                    errorMessage = "Acesso Negado: Apenas staff autorizado.";
+                    return;
+                }
+
+                if (user.EstadoConta != "Ativo")
+                {
+                    await SignInManager.SignOutAsync();
+                    errorMessage = "A sua conta não está ativa.";
+                    return;
+                }
+            }
             Logger.LogInformation("User logged in.");
             RedirectManager.RedirectTo(ReturnUrl);
         }
