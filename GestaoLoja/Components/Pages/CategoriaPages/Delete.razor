@@ -9,7 +9,18 @@
 
 <div class="container mt-4">
     <h1 class="text-danger">Apagar Categoria</h1>
-    <h3 class="text-danger">Tem a certeza? Isto não pode ser desfeito.</h3>
+
+    @if (!string.IsNullOrEmpty(MensagemErro))
+    {
+        <div class="alert alert-danger">
+            <strong>Erro:</strong> @MensagemErro
+        </div>
+        <a href="/categorias" class="btn btn-secondary mt-3">Voltar à Lista</a>
+    }
+    else
+    {
+        <h3 class="text-danger">Tem a certeza? Esta ação é irreversível.</h3>
+    }
     <hr />
 
     @if (categoria is null)
@@ -18,41 +29,40 @@
     }
     else
     {
-        <div class="card border-danger mb-3" style="max-width: 600px;">
-            <div class="card-header bg-danger text-white">Confirmar Eliminação</div>
+        <div class="card border-danger mb-3">
             <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-4">Imagem</dt>
-                    <dd class="col-sm-8">
-                        @if (categoria.Imagem != null && categoria.Imagem.Length > 0)
-                        {
-                            <img src="data:image/png;base64,@(Convert.ToBase64String(categoria.Imagem))"
-                                 class="img-thumbnail" style="max-width: 150px;" />
-                        }
-                        else
-                        {
-                            <span class="text-muted">Sem imagem</span>
-                        }
-                    </dd>
+                <div class="d-flex align-items-center gap-4">
+                    @if (categoria.Imagem != null && categoria.Imagem.Length > 0)
+                    {
+                        <img src="data:image/png;base64,@(Convert.ToBase64String(categoria.Imagem))"
+                             class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <i class="bi bi-tag fs-1 text-muted"></i>
+                        </div>
+                    }
 
-                    <dt class="col-sm-4 mt-2">Nome</dt>
-                    <dd class="col-sm-8 mt-2">@categoria.Nome</dd>
-
-                    <dt class="col-sm-4">Categoria Pai</dt>
-                    <dd class="col-sm-8">
-                        @(categoria.CategoriaPai != null ? categoria.CategoriaPai.Nome : "- Raiz -")
-                    </dd>
-                </dl>
+                    <div>
+                        <h4 class="card-title fw-bold">@categoria.Nome</h4>
+                        <p class="card-text text-muted mb-1">
+                            <strong>Categoria Pai:</strong> @(categoria.CategoriaPai != null ? categoria.CategoriaPai.Nome : "Raiz")
+                        </p>
+                        <span class="badge bg-secondary">ID: @categoria.Id</span>
+                    </div>
+                </div>
             </div>
-            <div class="card-footer">
-                <EditForm Model="categoria" OnValidSubmit="DeleteCategoria" FormName="delete" Enhance>
-                    <button type="submit" class="btn btn-danger me-2">
-                        <i class="bi bi-trash"></i> Sim, Apagar
-                    </button>
-                    <a href="/categorias" class="btn btn-secondary">
-                        <i class="bi bi-x-circle"></i> Cancelar
-                    </a>
-                </EditForm>
+            <div class="card-footer bg-transparent border-top-0 pb-3">
+                @if (string.IsNullOrEmpty(MensagemErro))
+                {
+                    <EditForm Model="categoria" OnValidSubmit="DeleteCategoria" FormName="delete_cat">
+                        <button type="submit" class="btn btn-danger me-2">
+                            <i class="bi bi-trash"></i> Confirmar Eliminação
+                        </button>
+                        <a href="/categorias" class="btn btn-outline-secondary">Cancelar</a>
+                    </EditForm>
+                }
             </div>
         </div>
     }
@@ -63,6 +73,7 @@
     public int Id { get; set; }
 
     private Categoria? categoria;
+    private string? MensagemErro;
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,9 +90,37 @@
 
     public async Task DeleteCategoria()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Categorias.Remove(categoria!);
-        await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/categorias");
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            // Verificar Produtos nesta categoria
+            bool temProdutos = await context.Produtos.AnyAsync(p => p.CategoriaId == Id);
+            if (temProdutos)
+            {
+                MensagemErro = "Não pode apagar esta categoria porque existem produtos associados.";
+                return;
+            }
+
+            // Verificar Subcategorias
+            bool temFilhas = await context.Categorias.AnyAsync(c => c.CategoriaPaiId == Id);
+            if (temFilhas)
+            {
+                MensagemErro = "Não pode apagar esta categoria porque ela tem subcategorias dependentes.";
+                return;
+            }
+
+            var catParaApagar = await context.Categorias.FindAsync(Id);
+            if (catParaApagar != null)
+            {
+                context.Categorias.Remove(catParaApagar);
+                await context.SaveChangesAsync();
+                NavigationManager.NavigateTo("/categorias");
+            }
+        }
+        catch (Exception ex)
+        {
+            MensagemErro = "Erro ao apagar: " + ex.Message;
+        }
     }
 }

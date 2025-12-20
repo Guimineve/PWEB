@@ -18,8 +18,6 @@
 
   <ItemGroup>
     <Folder Include="Data\Migrations\" />
-    <Folder Include="wwwroot\Categorias\" />
-    <Folder Include="wwwroot\Produtos\" />
   </ItemGroup>
 
 </Project>

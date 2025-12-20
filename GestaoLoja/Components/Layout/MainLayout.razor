@@ -14,14 +14,14 @@
             </button>
 
             <div class="collapse navbar-collapse" id="topNavbar">
-                <!-- Navegação principal -->
                 <ul class="navbar-nav me-auto mb-2 mb-md-0 align-items-center">
                     <li class="nav-item">
-                        <NavLink class="nav-link" href="/sobre">About</NavLink>
+                        <NavLink class="nav-link" href="sobre" title="Sobre">
+                            <img src="/img/about.png" style="height: 25px;" alt="Sobre" />
+                        </NavLink>
                     </li>
                 </ul>
 
-                <!-- Ações da conta -->
                 <div class="nav-actions d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 mt-2 mt-md-0 ms-md-auto" role="region" aria-label="Ações da conta">
                     <AuthorizeView>
                         <Authorized>
@@ -67,7 +67,7 @@
 
     <main>
         <article class="content px-4 mt-3">
-            @Body <!--Todo o código gerado quando é feito login, mediante o perfil, vai ser injetado aqui-->
+            @Body
         </article>
     </main>
 </div>

@@ -1,0 +1,243 @@
+﻿@page "/vendas/edit"
+@using Microsoft.EntityFrameworkCore
+@using GestaoLoja.Entities
+@using GestaoLoja.Data
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Processar Venda</PageTitle>
+
+<h1>Processar Venda #@Id</h1>
+<hr />
+
+@if (encomenda is null)
+{
+	<p><em>A carregar...</em></p>
+}
+else
+{
+
+	bool existeStockParaTudo = encomenda.Detalhes.All(d => d.Produto != null && d.Produto.Stock >= d.Quantidade);
+
+	@if (!string.IsNullOrEmpty(MensagemErro))
+	{
+		<div class="alert alert-danger">@MensagemErro</div>
+	}
+	@if (!string.IsNullOrEmpty(MensagemSucesso))
+	{
+		<div class="alert alert-success">@MensagemSucesso</div>
+	}
+
+	<div class="row">
+		<div class="col-md-4">
+			<div class="card shadow-sm mb-3">
+				<div class="card-header bg-primary text-white fw-bold">Ações Disponíveis</div>
+				<div class="card-body d-grid gap-2">
+
+					@if (encomenda.Estado == "Pendente")
+					{
+						<p class="small text-muted mb-1">Passo 1: Validar Pagamento</p>
+						<button class="btn btn-success" @onclick="ConfirmarPagamento">
+							<i class="bi bi-currency-euro"></i> Confirmar Pagamento
+						</button>
+					}
+
+					@if (encomenda.Estado == "Paga")
+					{
+						<p class="small text-muted mb-1">Passo 2: Enviar Produtos</p>
+
+						@if (existeStockParaTudo)
+						{
+							<button class="btn btn-primary" @onclick="ExpedirEncomenda">
+								<i class="bi bi-truck"></i> Expedir Encomenda
+							</button>
+						}
+						else
+						{
+							<div class="alert alert-warning small mb-0">
+								<i class="bi bi-exclamation-triangle-fill"></i>
+								<strong>Atenção:</strong> Não é possível expedir. Existem produtos sem stock suficiente.
+							</div>
+							<button class="btn btn-secondary" disabled>
+								<i class="bi bi-lock-fill"></i> Expedir Encomenda
+							</button>
+						}
+					}
+
+					@if (encomenda.Estado != "Expedida" && encomenda.Estado != "Anulada")
+					{
+						<hr />
+						<button class="btn btn-outline-danger" @onclick="AnularEncomenda">
+							<i class="bi bi-x-circle"></i> Anular Venda
+						</button>
+					}
+
+					@if (encomenda.Estado == "Expedida")
+					{
+						<div class="alert alert-info mb-0 text-center">
+							<i class="bi bi-check-all fs-4"></i><br />Venda Concluída
+						</div>
+					}
+					@if (encomenda.Estado == "Anulada")
+					{
+						<div class="alert alert-danger mb-0 text-center">
+							<i class="bi bi-x-octagon fs-4"></i><br />Venda Anulada
+						</div>
+					}
+				</div>
+			</div>
+
+			<div class="text-center mt-3">
+				<a href="/vendas" title="Voltar">
+					<img src="/img/backicon.png" style="height:40px" alt="Voltar" />
+				</a>
+			</div>
+		</div>
+
+		<div class="col-md-8">
+			<div class="card bg-light border-0">
+				<div class="card-body">
+					<h5 class="fw-bold">Itens da Encomenda</h5>
+					<p class="mb-3">
+						<strong>Cliente:</strong> @(encomenda.Cliente?.UserName) |
+						<strong>Total:</strong> <span class="text-success fw-bold">@encomenda.ValorTotal.ToString("C2")</span>
+						<strong>Estado Atual:</strong> <span class="badge bg-secondary">@encomenda.Estado</span>
+					</p>
+
+					<table class="table table-sm bg-white rounded align-middle">
+						<thead class="table-light">
+							<tr>
+								<th>Produto</th>
+								<th class="text-center">Qtd</th>
+								<th class="text-center">Stock Atual</th>
+								<th class="text-end">Subtotal</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var item in encomenda.Detalhes)
+							{
+								// Calcula se há stock para este item específico
+								bool temStockItem = (item.Produto?.Stock >= item.Quantidade);
+
+								<tr class="@(temStockItem ? "" : "table-danger")">
+									<td>
+										@(item.Produto?.Nome ?? "Produto Removido")
+									</td>
+
+									<td class="text-center fw-bold">@item.Quantidade</td>
+
+									<td class="text-center">
+										@if (!temStockItem && encomenda.Estado != "Expedida")
+										{
+											<span class="text-danger fw-bold">
+												@item.Produto?.Stock
+											</span>
+										}
+										else
+										{
+											<span class="text-success">@item.Produto?.Stock</span>
+										}
+									</td>
+
+									<td class="text-end fw-bold">
+										@((item.PrecoUnitario * item.Quantidade).ToString("C2"))
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	[SupplyParameterFromQuery]
+	public int Id { get; set; }
+
+	private Encomenda? encomenda;
+	private string? MensagemErro;
+	private string? MensagemSucesso;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await CarregarDados();
+	}
+
+	private async Task CarregarDados()
+	{
+		using var context = DbFactory.CreateDbContext();
+		encomenda = await context.Encomendas
+			.Include(e => e.Cliente)
+			.Include(e => e.Detalhes)
+			.ThenInclude(d => d.Produto)
+			.FirstOrDefaultAsync(m => m.Id == Id);
+
+		if (encomenda is null) NavigationManager.NavigateTo("notfound");
+	}
+
+	private async Task ConfirmarPagamento()
+	{
+		using var context = DbFactory.CreateDbContext();
+		var enc = await context.Encomendas.FindAsync(Id);
+		if (enc != null)
+		{
+			enc.Estado = "Paga";
+			await context.SaveChangesAsync();
+			MensagemSucesso = "Pagamento confirmado.";
+			await CarregarDados();
+		}
+	}
+
+	private async Task ExpedirEncomenda()
+	{
+		using var context = DbFactory.CreateDbContext();
+		var encParaExpedir = await context.Encomendas
+			.Include(e => e.Detalhes)
+			.FirstOrDefaultAsync(e => e.Id == Id);
+
+		if (encParaExpedir == null) return;
+
+		// Validar Stocks (Dupla verificação de segurança no servidor)
+		foreach (var detalhe in encParaExpedir.Detalhes)
+		{
+			var produtoNaBd = await context.Produtos.FindAsync(detalhe.ProdutoId);
+
+			if (produtoNaBd == null || produtoNaBd.Stock < detalhe.Quantidade)
+			{
+				MensagemErro = $"Erro crítico: Stock insuficiente para processar a encomenda.";
+				return;
+			}
+		}
+
+		// Abater Stock
+		foreach (var detalhe in encParaExpedir.Detalhes)
+		{
+			var produtoNaBd = await context.Produtos.FindAsync(detalhe.ProdutoId);
+			if (produtoNaBd != null)
+			{
+				produtoNaBd.Stock -= detalhe.Quantidade;
+			}
+		}
+
+		encParaExpedir.Estado = "Expedida";
+		await context.SaveChangesAsync();
+
+		MensagemSucesso = "Encomenda expedida e stocks atualizados!";
+		await CarregarDados();
+	}
+
+	private async Task AnularEncomenda()
+	{
+		using var context = DbFactory.CreateDbContext();
+		var enc = await context.Encomendas.FindAsync(Id);
+		if (enc != null)
+		{
+			enc.Estado = "Anulada";
+			await context.SaveChangesAsync();
+			MensagemSucesso = "Encomenda anulada.";
+			await CarregarDados();
+		}
+	}
+}

@@ -1,0 +1,125 @@
+﻿@page "/vendas/details"
+@using Microsoft.EntityFrameworkCore
+@using GestaoLoja.Entities
+@using GestaoLoja.Data
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Detalhes da Venda</PageTitle>
+
+<div class="container mt-4">
+    <h1>Detalhes da Venda #@Id</h1>
+    <hr />
+
+    @if (encomenda is null)
+    {
+        <p><em>A carregar...</em></p>
+    }
+    else
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3 d-flex flex-column align-items-center justify-content-center bg-light rounded">
+                        @if (encomenda.Estado == "Pendente")
+                        {
+                            <i class="bi bi-hourglass-split text-warning" style="font-size: 8rem;"></i>
+                        }
+                        else if (encomenda.Estado == "Paga")
+                        {
+
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 8rem;"></i>
+                        }
+                        else if (encomenda.Estado == "Expedida")
+                        {
+
+                            <i class="bi bi-truck text-primary" style="font-size: 8rem;"></i>
+                        }
+                        else
+                        {
+
+                            <i class="bi bi-x-circle-fill text-danger" style="font-size: 8rem;"></i>
+                        }
+
+                        <h3 class="mt-3">@encomenda.Estado</h3>
+                    </div>
+
+                    <div class="col-md-8">
+                        <dl class="row">
+                            <dt class="col-sm-3">Data</dt>
+                            <dd class="col-sm-9">@encomenda.Data.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-3">Cliente</dt>
+                            <dd class="col-sm-9 fw-bold">@(encomenda.Cliente?.UserName ?? "Desconhecido")</dd>
+
+                            <dt class="col-sm-3">Email</dt>
+                            <dd class="col-sm-9 text-muted">@(encomenda.Cliente?.Email ?? "-")</dd>
+
+                            <dt class="col-sm-3">Total</dt>
+                            <dd class="col-sm-9 text-success fw-bold fs-4">@encomenda.ValorTotal.ToString("C2")</dd>
+                        </dl>
+
+                        <div class="mt-4">
+                            <a href="vendas/edit?id=@encomenda.Id" title="Editar" class="me-2">
+                                <img src="/img/editicon.png" style="height:30px" alt="Editar" />
+                            </a>
+                            <a href="/vendas" title="Voltar" class="btn btn-link p-0">
+                                <img src="/img/backicon.png" style="height:30px" alt="Voltar" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="mt-4">Itens da Encomenda</h4>
+        <div class="table-responsive bg-white rounded shadow-sm p-3">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço Unit.</th>
+                        <th>Qtd</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in encomenda.Detalhes)
+                    {
+                        <tr>
+                            <td>
+                                @if (item.Produto?.Imagem != null)
+                                {
+                                    <img src="data:image/png;base64,@(Convert.ToBase64String(item.Produto.Imagem))" class="rounded me-2" style="width: 30px; height: 30px; object-fit: cover;" />
+                                }
+                                @(item.Produto?.Nome ?? "Produto Removido")
+                            </td>
+                            <td>@item.PrecoUnitario.ToString("C2")</td>
+                            <td>@item.Quantidade</td>
+                            <td class="text-end fw-bold">@((item.PrecoUnitario * item.Quantidade).ToString("C2"))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    private Encomenda? encomenda;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        encomenda = await context.Encomendas
+            .Include(e => e.Cliente)
+            .Include(e => e.Detalhes)
+            .ThenInclude(d => d.Produto)
+            .FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (encomenda is null) NavigationManager.NavigateTo("notfound");
+    }
+}
