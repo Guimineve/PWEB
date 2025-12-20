@@ -127,6 +127,8 @@ namespace GestaoLoja.Migrations
 
                     b.HasIndex("CategoriaPaiId");
 
+                    b.HasIndex("CategoriaPaiId");
+
                     b.ToTable("Categorias");
                 });
 

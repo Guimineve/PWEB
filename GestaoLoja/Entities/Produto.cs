@@ -18,6 +18,7 @@ namespace GestaoLoja.Entities
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Preco { get; set; }
 
+        [Required]
         [Column(TypeName = "decimal(18, 2)")]
         public decimal MargemLucro { get; set; }
 
