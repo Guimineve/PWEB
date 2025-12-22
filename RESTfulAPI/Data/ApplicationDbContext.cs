@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using GestaoLoja.Entities;
+using RESTfulAPI.Entities;
 
-namespace GestaoLoja.Data
+namespace RESTfulAPI.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
