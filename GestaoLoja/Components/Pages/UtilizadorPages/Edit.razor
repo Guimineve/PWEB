@@ -68,15 +68,16 @@ else
                                 <hr />
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold mb-2">Perfis / Funções</label>
+                                    <label class="form-label fw-bold mb-2">Roles</label>
 
                                     @foreach (var item in RolesParaEscolha)
                                     {
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox"
                                                    @bind="item.IsSelected" id="role_@item.RoleName">
+
                                             <label class="form-check-label" for="role_@item.RoleName">
-                                                @item.RoleName
+                                                @item.DisplayName
                                             </label>
                                         </div>
                                     }
@@ -109,8 +110,10 @@ else
     public class RoleSelection
     {
         public string RoleName { get; set; } = "";
+        public string DisplayName { get; set; } = "";
         public bool IsSelected { get; set; }
     }
+
     private List<RoleSelection> RolesParaEscolha = new();
 
     protected override async Task OnInitializedAsync()
@@ -141,9 +144,17 @@ else
 
         foreach (var role in todosRolesPossiveis)
         {
+            string nomeUI = role switch
+            {
+                "Admin" => "Administrador",
+                "Funcionario" => "Funcionário",
+                _ => role
+            };
+
             RolesParaEscolha.Add(new RoleSelection
             {
                 RoleName = role,
+                DisplayName = nomeUI,
                 IsSelected = userRoles.Contains(role)
             });
         }
