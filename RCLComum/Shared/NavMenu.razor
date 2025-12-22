@@ -1,0 +1,40 @@
+﻿<nav class="navbar navbar-expand-md navbar-dark bg-dark-custom shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand px-3" href="">MyColl</a>
+
+        @* Botão para Mobile (Hambúrguer) *@
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                <li class="nav-item px-2">
+                    <NavLink class="nav-link" href="carrinho" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill"></span> Carrinho
+                    </NavLink>
+                </li>
+                <li class="nav-item px-2">
+                    <NavLink class="nav-link" href="favoritos">
+                        <span class="bi bi-collection-fill"></span> Favoritos
+                    </NavLink>
+                </li>
+             
+            </ul>
+
+            @* Lado direito: Info ou Login *@
+            <div class="d-flex pe-3">
+                <NavLink class="nav-link text-light-50" href="registar">
+                    <span class="bi bi-info-circle-fill"></span> Registar
+                    
+
+                </NavLink>
+                <NavLink class="nav-link text-light-50" href="Login">
+
+                    <span class="bi bi-info-circle-fill"></span> Login
+
+                </NavLink>
+            </div>
+        </div>
+    </div>
+</nav>

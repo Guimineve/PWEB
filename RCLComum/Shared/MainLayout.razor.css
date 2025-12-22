@@ -1,0 +1,19 @@
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ocupa a altura toda do ecrã */
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fdfaf5; /* Forçamos o bege aqui também para prevenir falhas */
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    /* Removemos paddings laterais aqui para o slider encostar se quisermos */
+}
