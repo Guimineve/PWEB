@@ -1,0 +1,52 @@
+@using RCLComum.DTOs
+@using RCLComum.Services
+@using RCLComum.Interfaces
+@using Microsoft.AspNetCore.Components
+
+<div class="categorias-wrapper py-3">
+    <h5 class="mb-3 px-3 border-start border-4 border-warning">1. Escolhe a Categoria</h5>
+
+    <div class="d-flex overflow-auto gap-3 px-3 pb-2" style="scroll-behavior: smooth;">
+        <button class="btn @(CategoriaSelecionadaId == 0 ? "btn-dark" : "btn-outline-dark") rounded-pill text-nowrap"
+                @onclick="() => Selecionar(0)">
+            Todas
+        </button>
+
+        @if (Categorias != null)
+        {
+            @foreach (var cat in Categorias)
+            {
+                <button class="btn @(CategoriaSelecionadaId == cat.Id ? "btn-warning" : "btn-outline-secondary") rounded-pill text-nowrap"
+                        @onclick="() => Selecionar(cat.Id)">
+                    @cat.Nome
+                </button>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Inject] public IApiServices ApiServices { get; set; }
+
+    // Este evento envia o ID da categoria para a HOME
+    [Parameter] public EventCallback<int> OnCategoriaSelecionada { get; set; }
+
+    private List<Categoria> Categorias { get; set; } = new();
+    private int CategoriaSelecionadaId { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await ApiServices.GetCategoriasAsync();
+        if (result.Sucesso && result.Data != null)
+        {
+            Categorias = result.Data;
+        }
+    }
+
+    private async Task Selecionar(int id)
+    {
+        CategoriaSelecionadaId = id;
+        // Avisa o pai (Home) que mudou
+        await OnCategoriaSelecionada.InvokeAsync(id);
+    }
+}

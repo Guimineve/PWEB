@@ -1,37 +1,48 @@
 ﻿@page "/"
 @using RCLComum.DTOs
 @using RCLComum.Services
-@using RCLComum.Pages 
+@using RCLComum.Pages
 @using RCLComum.Interfaces
-@* Certifica-te que importas o namespace onde criaste os componentes acima *@
-
 @inject IApiServices ApiServices
 
-<PageTitle>MyColl - A Minha Coleção</PageTitle>
+<div class="home-container" style="background-color: #fdfaf5; min-height: 100vh;">
 
-<div class="container-fluid">
-    
-    <SlideProdutoComponent ProdutoDestaque="@Destaque" />
+    <CategoriasCarousel OnCategoriaSelecionada="FiltrarProdutos" />
 
-    <h3 class="mt-5 mb-3">A Tua Coleção</h3>
-    
-    <CardsCarousel />
+    <hr class="mx-3 text-muted" />
+
+    <div class="py-3">
+        <h5 class="mb-3 px-3 border-start border-4 border-primary">2. Produtos Disponíveis</h5>
+        <CardCarousel CategoriaIdFiltro="@categoriaSelecionada" />
+    </div>
+
+    <div class="mt-5">
+        <h5 class="mb-3 px-3 border-start border-4 border-success">3. Sugestão para ti</h5>
+        <SlideProdutoComponent ProdutoDestaque="@Destaque" />
+    </div>
 
 </div>
 
 @code {
+    // Estado da Home
+    private int categoriaSelecionada = 0;
     private Produto? Destaque { get; set; }
+
+    // Este método é chamado quando se num botão no CategoriasCarousel
+    private void FiltrarProdutos(int idCategoria)
+    {
+        categoriaSelecionada = idCategoria;
+        // O Blazor deteta a mudança e atualiza o CardCarousel automaticamente
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        // Pedimos um destaque aleatório (tens de ter este método no ApiService)
-        // Se não tiveres "Random", pede "GetProdutos" e faz Random aqui
-        var response = await ApiServices.GetProdutosAsync();
-        
-        if(response.Sucesso && response.Data != null && response.Data.Any())
+        // Carrega um destaque aleatório
+        var result = await ApiServices.GetProdutosAsync();
+        if (result.Sucesso && result.Data != null && result.Data.Any())
         {
             var rnd = new Random();
-            Destaque = response.Data[rnd.Next(response.Data.Count)];
+            Destaque = result.Data[rnd.Next(result.Data.Count)];
         }
     }
 }

@@ -1,89 +1,115 @@
-@page "/minhas-encomendas"
+ï»¿@page "/minhas-encomendas"
+@using RCLComum.DTOs
+@using RCLComum.Services
+@using RCLComum.Interfaces
+@inject IApiServices ApiServices
+@inject NavigationManager NavManager
 
+<div class="container mt-4 mb-5">
+    <h3 class="mb-4 border-start border-4 border-info px-3">HistÃ³rico de Encomendas</h3>
 
-<PageTitle>As minhas Encomendas</PageTitle>
-
-<h1>Histórico de Encomendas</h1>
-
-<p>Consulta aqui o estado das tuas compras anteriores.</p>
-
-<table class="table table-striped mt-4">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Data</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (listaEncomendas == null)
-        {
-            <tr>
-                <td colspan="5" class="text-center">A carregar...</td>
-            </tr>
-        }
-        else if (listaEncomendas.Count == 0)
-        {
-            <tr>
-                <td colspan="5" class="text-center text-muted">
-                    Ainda não tens encomendas registadas.
-                </td>
-            </tr>
-        }
-        else
-        {
-            @foreach (var item in listaEncomendas)
+    @if (Carregando)
+    {
+        <div class="text-center p-5">
+            <div class="spinner-border text-info" role="status"></div>
+            <p>A carregar o histÃ³rico...</p>
+        </div>
+    }
+    else if (ListaEncomendas == null || !ListaEncomendas.Any())
+    {
+        <div class="alert alert-secondary text-center">
+            <i class="bi bi-box-seam fs-1"></i>
+            <p class="mt-2">Ainda nÃ£o fizeste nenhuma encomenda.</p>
+            <a href="/" class="btn btn-primary mt-2">Ir Ã s Compras</a>
+        </div>
+    }
+    else
+    {
+        <div class="accordion" id="accordionEncomendas">
+            @foreach (var enc in ListaEncomendas)
             {
-                <tr>
-                    <td>@item.Numero</td>
-                    <td>@item.Data.ToShortDateString()</td>
-                    <td>@item.Total.ToString("C")</td>
-                    <td>
-                        <span class="badge @ObterCorEstado(item.Estado)">
-                            @item.Estado
-                        </span>
-                    </td>
-                    <td>
-                        <a href="minhas-encomendas/@item.Numero" class="btn btn-sm btn-outline-primary">
-                            Ver Detalhes
-                        </a>
-                    </td>
-                </tr>
+                <div class="accordion-item border mb-2 shadow-sm rounded">
+
+                    <h2 class="accordion-header" id="heading-@enc.Id">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapse-@enc.Id" aria-expanded="false">
+
+                            <div class="d-flex w-100 justify-content-between align-items-center me-3">
+                                <div>
+                                    <strong>Encomenda #@enc.Id</strong>
+                                    <br />
+                                    <small class="text-muted">@enc.DataEncomenda.ToShortDateString()</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge @ObterCorEstado(enc.Estado) mb-1">@enc.Estado</span>
+                                    <div class="fw-bold text-success">@enc.ValorTotal.ToString("C")</div>
+                                </div>
+                            </div>
+
+                        </button>
+                    </h2>
+
+                    <div id="collapse-@enc.Id" class="accordion-collapse collapse" data-bs-parent="#accordionEncomendas">
+                        <div class="accordion-body bg-light">
+                            <h6 class="text-muted mb-3">Itens Comprados:</h6>
+
+                            <ul class="list-group">
+                                @foreach (var item in enc.Detalhes)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <div>
+                                                <span>@item.ProdutoNome</span>
+                                                <div class="small text-muted">@item.Quantidade x @item.PrecoUnitario.ToString("C")</div>
+                                            </div>
+                                        </div>
+                                        <span class="fw-bold">@item.TotalLinha.ToString("C")</span>
+                                    </li>
+                                }
+                            </ul>
+
+                        </div>
+                    </div>
+                </div>
             }
-        }
-    </tbody>
-</table>
+        </div>
+    }
+</div>
 
 @code {
-    // Classe interna para simulação
-    private class EncomendaResumo
+    private List<Encomenda> ListaEncomendas { get; set; } = new();
+    private bool Carregando { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
     {
-        public int Numero { get; set; }
-        public DateTime Data { get; set; }
-        public decimal Total { get; set; }
-        public string Estado { get; set; } = string.Empty;
+        Carregando = true;
+
+        // âš ï¸ ATENÃ‡ÃƒO: Aqui deves ir buscar o ID do utilizador logado.
+        // Como ainda nÃ£o temos AuthProvider completo, vou pÃ´r "1" fixo para testares.
+        int userIdTemporario = 1;
+
+        var resultado = await ApiServices.GetMinhasEncomendasAsync(userIdTemporario);
+
+        if (resultado.Sucesso && resultado.Data != null)
+        {
+            ListaEncomendas = resultado.Data;
+            // Ordenar por data (mais recente primeiro)
+            ListaEncomendas = ListaEncomendas.OrderByDescending(x => x.DataEncomenda).ToList();
+        }
+
+        Carregando = false;
     }
 
-    private List<EncomendaResumo> listaEncomendas = new List<EncomendaResumo>();
-
-    protected override void OnInitialized()
+    // FunÃ§Ã£o auxiliar para pintar o estado (Bootstrap classes)
+    private string ObterCorEstado(string estado)
     {
-        // Simulação de Backend
-        listaEncomendas = new List<EncomendaResumo>
+        return estado.ToLower() switch
         {
-            new EncomendaResumo { Numero = 1001, Data = new DateTime(2025, 12, 14), Total = 45.50m, Estado = "Entregue" },
-            new EncomendaResumo { Numero = 1002, Data = DateTime.Now.AddDays(-2), Total = 12.99m, Estado = "Pendente" },
-            new EncomendaResumo { Numero = 1003, Data = DateTime.Now.AddDays(-10), Total = 150.00m, Estado = "Cancelada" }
+            "pendente" => "bg-warning text-dark",
+            "enviado" => "bg-info text-dark",
+            "entregue" => "bg-success",
+            "cancelado" => "bg-danger",
+            _ => "bg-secondary"
         };
     }
-
-    private string ObterCorEstado(string estado) => estado switch
-    {
-        "Entregue" => "bg-success",
-        "Pendente" => "bg-warning text-dark",
-        "Cancelada" => "bg-danger",
-        _ => "bg-secondary"
-    };
 }

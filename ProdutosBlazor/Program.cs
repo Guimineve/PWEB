@@ -9,6 +9,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
 builder.Services.AddScoped<IApiServices, ApiServices>();
 builder.Services.AddScoped<ICardsUtilsServices, CardsUtilsServices>();
+builder.Services.AddScoped<ICarrinhoService, CarrinhoService>();
 
 builder.Services.AddScoped(sp => new HttpClient
 {

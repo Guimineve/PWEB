@@ -16,5 +16,10 @@ namespace RCLComum.Interfaces
         Task<ApiResponse<bool>> RegistarUtilizador(RegisterModel model);
 
         Task<ApiResponse<List<Produto>>> GetProdutosAsync();
+
+        Task<ApiResponse<List<Categoria>>> GetCategoriasAsync();
+
+        Task<ApiResponse<List<Encomenda>>> GetMinhasEncomendasAsync(int userId);
+        Task<ApiResponse<bool>> CriarEncomendaAsync(Encomenda novaEncomenda);
     }
 }

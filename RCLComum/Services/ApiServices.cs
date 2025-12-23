@@ -118,5 +118,78 @@ namespace RCLComum.Services
 
             return resposta;
         }
+        public async Task<ApiResponse<List<Categoria>>> GetCategoriasAsync()
+        {
+            var resposta = new ApiResponse<List<Categoria>>();
+            try
+            {
+                var httpResponse = await _httpClient.GetAsync("api/Categorias"); 
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    resposta.Sucesso = true;
+                    resposta.Data = await httpResponse.Content.ReadFromJsonAsync<List<Categoria>>();
+                }
+                else
+                {
+                    resposta.Sucesso = false;
+                    resposta.Data = new List<Categoria>();
+                }
+            }
+            catch (Exception ex)
+            {
+                resposta.Sucesso = false;
+                resposta.Mensagem = ex.Message;
+            }
+            return resposta;
+        }
+        
+
+        public async Task<ApiResponse<List<Encomenda>>> GetMinhasEncomendasAsync(int userId)
+        {
+            var resposta = new ApiResponse<List<Encomenda>>();
+            try
+            {
+            
+                var httpResponse = await _httpClient.GetAsync($"api/Encomendas/User/{userId}");
+
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    resposta.Sucesso = true;
+                    resposta.Data = await httpResponse.Content.ReadFromJsonAsync<List<Encomenda>>();
+                }
+                else
+                {
+                    resposta.Sucesso = false;
+                    resposta.Data = new List<Encomenda>(); 
+                    resposta.Mensagem = "Não foi possível carregar as encomendas.";
+                }
+            }
+            catch (Exception ex)
+            {
+                resposta.Sucesso = false;
+                resposta.Data = new List<Encomenda>();
+                resposta.Mensagem = ex.Message;
+            }
+            return resposta;
+        }
+
+        public async Task<ApiResponse<bool>> CriarEncomendaAsync(Encomenda novaEncomenda)
+        {
+            // Exemplo rápido para criar encomenda
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/Encomendas", novaEncomenda);
+                return new ApiResponse<bool>
+                {
+                    Sucesso = response.IsSuccessStatusCode,
+                    Data = response.IsSuccessStatusCode,
+                    Mensagem = response.IsSuccessStatusCode ? "Sucesso" : "Erro ao gravar"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<bool> { Sucesso = false, Mensagem = ex.Message };
+            }
+        }
     }
 }
