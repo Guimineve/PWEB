@@ -2,40 +2,51 @@
 using RCLComum.Interfaces;
 using System.Net.Http;
 using System.Net.Http.Json;
-// Importa System.Text.Json para ler as respostas
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.JSInterop;
 
 namespace RCLComum.Services
 {
     public class ApiServices : IApiServices
     {
         private readonly HttpClient _httpClient;
+        private readonly IJSRuntime _js;
 
-        public ApiServices(HttpClient httpClient)
+        public ApiServices(HttpClient httpClient, IJSRuntime js)
         {
             _httpClient = httpClient;
+            _js = js;
         }
 
         public async Task<ApiResponse<bool>> Login(LoginModel model)
         {
             try
             {
-                // 1. Envia o POST para a API
-                var response = await _httpClient.PostAsJsonAsync("api/Auth/Login", model);
+                // Envia o POST para a API
+                var response = await _httpClient.PostAsJsonAsync("api/Utilizadores/LoginUser", model);
 
-                // 2. Prepara a resposta
+                // Prepara a resposta
                 var apiResponse = new ApiResponse<bool>();
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Se correu bem (200 OK)
-                    //TODO: Mais tarde vamos precisar de ler o TOKEN aqui.
-                    // Por agora, assumimos apenas que o login foi válido.
+                    var loginResult = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
-                    apiResponse.Sucesso = true;
-                    apiResponse.Data = true;
-                    apiResponse.Mensagem = "Login efetuado com sucesso.";
+                    if (loginResult != null && !string.IsNullOrEmpty(loginResult.AccessToken))
+                    {
+                        // GUARDAR O TOKEN NO BROWSER (localStorage)
+                        await _js.InvokeVoidAsync("localStorage.setItem", "authToken", loginResult.AccessToken);
+
+                        apiResponse.Sucesso = true;
+                        apiResponse.Data = true;
+                        apiResponse.Mensagem = "Login efetuado com sucesso.";
+                    }
+                    else
+                    {
+                        apiResponse.Sucesso = false;
+                        apiResponse.Mensagem = "Token não recebido.";
+                    }
                 }
                 else
                 {
