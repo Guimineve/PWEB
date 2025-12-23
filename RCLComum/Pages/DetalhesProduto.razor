@@ -1,0 +1,113 @@
+﻿@page "/produto/{Id:int}"
+@using RCLComum.DTOs
+@using RCLComum.Services
+@using RCLComum.Interfaces
+@inject IApiServices ApiServices
+@inject ICarrinhoService CarrinhoService
+@inject NavigationManager NavManager
+
+<div class="detalhes-container fade-in">
+
+    <button class="btn-voltar" @onclick="Voltar">
+        <i class="bi bi-arrow-left"></i>
+    </button>
+
+    @if (ProdutoAtual == null)
+    {
+        <div class="d-flex justify-content-center align-items-center vh-100">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else
+    {
+        <div class="imagem-destaque" style="background-image: url('@ProdutoAtual.ImagemUrl');"></div>
+
+        <div class="info-painel">
+
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h2 class="fw-bold mb-0">@ProdutoAtual.Nome</h2>
+                <span class="badge bg-warning text-dark fs-5">@ProdutoAtual.Preco.ToString("C")</span>
+            </div>
+
+            <small class="text-muted text-uppercase fw-bold">Referência #@ProdutoAtual.Id</small>
+
+            <hr class="my-3 opacity-25" />
+
+            <h5 class="fw-bold">Descrição</h5>
+            <p class="text-secondary" style="line-height: 1.6;">
+                @ProdutoAtual.Detalhe
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                (Texto de enchimento para parecer uma descrição longa e bonita).
+            </p>
+
+            <div class="action-area mt-5">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+
+                    <div class="qtd-selector">
+                        <button @onclick="DiminuirQtd"><span>−</span></button>
+                        <span class="fw-bold">@QuantidadeSelecionada</span>
+                        <button @onclick="AumentarQtd"><span>+</span></button>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg flex-grow-1 rounded-pill shadow"
+                            @onclick="AdicionarAoCarrinho">
+                        Adicionar <span class="fw-bold ms-1">@((ProdutoAtual.Preco * QuantidadeSelecionada).ToString("C"))</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Produto? ProdutoAtual { get; set; }
+    private int QuantidadeSelecionada { get; set; } = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Busca o produto pelo ID que veio no URL
+        var result = await ApiServices.GetProdutoByIdAsync(Id);
+        if (result.Sucesso)
+        {
+            ProdutoAtual = result.Data;
+        }
+        else
+        {
+            // Se não encontrar, volta para a home
+            NavManager.NavigateTo("/");
+        }
+    }
+
+    private void AumentarQtd() => QuantidadeSelecionada++;
+
+    private void DiminuirQtd()
+    {
+        if (QuantidadeSelecionada > 1) QuantidadeSelecionada--;
+    }
+
+    private void AdicionarAoCarrinho()
+    {
+        if (ProdutoAtual == null) return;
+
+        // Adiciona N vezes conforme a quantidade escolhida
+        for (int i = 0; i < QuantidadeSelecionada; i++)
+        {
+            CarrinhoService.AdicionarProduto(ProdutoAtual);
+        }
+
+        // Volta para a loja ou vai para o carrinho?
+        // Opção A: Vai para o carrinho
+        NavManager.NavigateTo("/carrinho");
+
+        // Opção B: Volta para a Home (Descomenta se preferires)
+        // NavManager.NavigateTo("/");
+    }
+
+    private void Voltar()
+    {
+        NavManager.NavigateTo("/");
+    }
+}

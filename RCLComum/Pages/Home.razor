@@ -3,46 +3,53 @@
 @using RCLComum.Services
 @using RCLComum.Pages
 @using RCLComum.Interfaces
+
 @inject IApiServices ApiServices
 
-<div class="home-container" style="background-color: #fdfaf5; min-height: 100vh;">
+<div class="home-fullscreen" style="display: flex; flex-direction: column; min-height: 100vh;">
 
-    <CategoriasCarousel OnCategoriaSelecionada="FiltrarProdutos" />
+    <div class="container-fluid pt-3">
 
-    <hr class="mx-3 text-muted" />
+        <CategoriasCarousel OnCategoriaSelecionada="FiltrarProdutos" />
 
-    <div class="py-3">
-        <h5 class="mb-3 px-3 border-start border-4 border-primary">2. Produtos Disponíveis</h5>
-        <CardCarousel CategoriaIdFiltro="@categoriaSelecionada" />
+        <hr class="mx-3 text-muted" />
+
+        <div class="py-3">
+            <CardCarousel CategoriaIdFiltro="@categoriaSelecionada" />
+        </div>
+
+        <div class="mt-5 pb-5">
+            <h5 class="mb-3 px-3 border-start border-4 border-success">3. Sugestão para ti</h5>
+            <SlideProdutoComponent ProdutoDestaque="@Destaque" />
+        </div>
+
     </div>
-
-    <div class="mt-5">
-        <h5 class="mb-3 px-3 border-start border-4 border-success">3. Sugestão para ti</h5>
-        <SlideProdutoComponent ProdutoDestaque="@Destaque" />
-    </div>
-
 </div>
 
 @code {
-    // Estado da Home
     private int categoriaSelecionada = 0;
     private Produto? Destaque { get; set; }
 
-    // Este método é chamado quando se num botão no CategoriasCarousel
     private void FiltrarProdutos(int idCategoria)
     {
         categoriaSelecionada = idCategoria;
-        // O Blazor deteta a mudança e atualiza o CardCarousel automaticamente
+        StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        // Carrega um destaque aleatório
-        var result = await ApiServices.GetProdutosAsync();
-        if (result.Sucesso && result.Data != null && result.Data.Any())
+        try
         {
-            var rnd = new Random();
-            Destaque = result.Data[rnd.Next(result.Data.Count)];
+            var result = await ApiServices.GetProdutosAsync();
+            if (result.Sucesso && result.Data != null && result.Data.Any())
+            {
+                var rnd = new Random();
+                Destaque = result.Data[rnd.Next(result.Data.Count)];
+            }
+        }
+        catch
+        {
+            // Ignora erro no destaque para não bloquear a página
         }
     }
 }

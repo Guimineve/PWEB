@@ -18,7 +18,8 @@ namespace RCLComum.DTOs
         public int CategoriaId { get; set; }
         // Mantemos o array de bytes que vem da BD
         public byte[]? Imagem { get; set; }
-  public string ImagemUrl
+        private string? _urlManual;
+        public string ImagemUrl
         {
             get
             {
@@ -27,6 +28,11 @@ namespace RCLComum.DTOs
 
                 string base64 = Convert.ToBase64String(Imagem);
                 return $"data:image/png;base64,{base64}";
+            }
+            set
+            {
+                // Aqui permitimos que o Mock escreva o valor!
+                _urlManual = value;
             }
         }
 

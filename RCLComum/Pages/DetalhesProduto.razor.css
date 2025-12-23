@@ -1,0 +1,98 @@
+.detalhes-container {
+    background-color: #fff;
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 80px; /* Espaço para não tapar o conteúdo com o footer se houver */
+}
+
+/* Botão Voltar Flutuante */
+.btn-voltar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    width: 45px;
+    height: 45px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #333;
+    transition: transform 0.2s;
+}
+
+    .btn-voltar:active {
+        transform: scale(0.9);
+    }
+
+/* Imagem Grande no Topo */
+.imagem-destaque {
+    width: 100%;
+    height: 45vh; /* Ocupa 45% da altura do ecrã */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Painel de Informação que "sobrepõe" a imagem */
+.info-painel {
+    margin-top: -40px; /* Sobe para cima da imagem */
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    background-color: white;
+    padding: 30px 20px;
+    position: relative;
+    min-height: 50vh;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+}
+
+/* Seletor de Quantidade */
+.qtd-selector {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: #f8f9fa;
+    padding: 5px 10px;
+    border-radius: 50px;
+    border: 1px solid #e9ecef;
+}
+
+    .qtd-selector button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #333;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .qtd-selector span {
+        font-size: 1.2rem;
+        min-width: 20px;
+        text-align: center;
+    }
+
+/* Animação suave de entrada */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+    

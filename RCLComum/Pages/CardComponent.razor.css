@@ -1,19 +1,42 @@
+/* Configuração Base do Cartão */
 .card-produto {
-    min-width: 200px; /* Largura fixa para o slider funcionar */
-    height: 300px;
-    margin-right: 15px; /* Espaço entre cartões */
-    border-radius: 10px;
+    min-width: 240px; /* Largura um pouco maior para caber o texto */
+    height: 380px; /* Altura fixa */
+    margin-right: 15px;
+    border-radius: 15px;
     position: relative;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    /* MAGIA FLEXBOX: Alinha tudo ao fundo */
     display: flex;
     flex-direction: column;
-    justify-content: flex-end; /* Texto no fundo */
-    transition: margin-left 0.5s ease; /* Animação suave */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    justify-content: flex-end;
 }
 
-.card-content {
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 10px;
-    text-align: center;
+/* Sombra no texto para leitura */
+.text-shadow {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
 }
+
+/* Overlay Gradiente: Faz o fundo escurecer na parte de baixo */
+/* Isto garante que consegues ler os botões mesmo se a imagem for branca */
+.card-overlay {
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+    width: 100%;
+    padding-top: 40px; /* Espaço para o gradiente suavizar */
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+/* Ajustes finos nos botões */
+.footer-button button {
+    font-size: 0.85rem; /* Texto ligeiramente mais pequeno para caber */
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+}
+
+    .footer-button button:active {
+        transform: scale(0.98);
+    }
