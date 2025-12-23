@@ -1,62 +1,37 @@
 ﻿@page "/"
+@using RCLComum.DTOs
+@using RCLComum.Services
+@using RCLComum.Pages 
+@using RCLComum.Interfaces
+@* Certifica-te que importas o namespace onde criaste os componentes acima *@
 
-<div class="home-fullscreen">
-    @* --- SECÇÃO DO SLIDER (Carrossel) --- *@
-    <div id="myCollCarousel" class="carousel slide shadow-sm" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            <div class="carousel-item active">
-                <div class="slider-content s1">
-                    <div class="container">
-                        <span class="badge bg-warning text-dark mb-2">Novo na Coleção</span>
-                        <h1>Edições Limitadas</h1>
-                        <p>Descobre os itens mais raros adicionados esta semana.</p>
-                        <button class="btn btn-light mt-3">Ver Detalhes</button>
-                    </div>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <div class="slider-content s2">
-                    <div class="container">
-                        <span class="badge bg-danger mb-2">Destaque</span>
-                        <h1>Organização Total</h1>
-                        <p>Nunca percas o rasto de um item da tua biblioteca.</p>
-                        <button class="btn btn-light mt-3">Começar Agora</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#myCollCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#myCollCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        </button>
-    </div>
+@inject IApiServices ApiServices
 
-    @* --- CONTEÚDO INFERIOR --- *@
-    <div class="container py-5">
-        <div class="row g-4">
-            <div class="col-md-4 text-center">
-                <div class="info-box p-3">
-                    <i class="bi bi-collection fs-2 text-secondary"></i>
-                    <h5 class="mt-2">Categorias</h5>
-                    <p class="small text-muted">Organizado por tipo e raridade.</p>
-                </div>
-            </div>
-            <div class="col-md-4 text-center border-start border-end">
-                <div class="info-box p-3">
-                    <i class="bi bi-graph-up-arrow fs-2 text-secondary"></i>
-                    <h5 class="mt-2">Estatísticas</h5>
-                    <p class="small text-muted">Acompanha o valor da tua coleção.</p>
-                </div>
-            </div>
-            <div class="col-md-4 text-center">
-                <div class="info-box p-3">
-                    <i class="bi bi-cloud-check fs-2 text-secondary"></i>
-                    <h5 class="mt-2">Sincronizado</h5>
-                    <p class="small text-muted">Acede em qualquer dispositivo.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>  
+<PageTitle>MyColl - A Minha Coleção</PageTitle>
+
+<div class="container-fluid">
+    
+    <SlideProdutoComponent ProdutoDestaque="@Destaque" />
+
+    <h3 class="mt-5 mb-3">A Tua Coleção</h3>
+    
+    <CardsCarousel />
+
+</div>
+
+@code {
+    private Produto? Destaque { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Pedimos um destaque aleatório (tens de ter este método no ApiService)
+        // Se não tiveres "Random", pede "GetProdutos" e faz Random aqui
+        var response = await ApiServices.GetProdutosAsync();
+        
+        if(response.Sucesso && response.Data != null && response.Data.Any())
+        {
+            var rnd = new Random();
+            Destaque = response.Data[rnd.Next(response.Data.Count)];
+        }
+    }
+}

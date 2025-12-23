@@ -1,0 +1,89 @@
+@page "/minhas-encomendas"
+
+
+<PageTitle>As minhas Encomendas</PageTitle>
+
+<h1>Histórico de Encomendas</h1>
+
+<p>Consulta aqui o estado das tuas compras anteriores.</p>
+
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Data</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (listaEncomendas == null)
+        {
+            <tr>
+                <td colspan="5" class="text-center">A carregar...</td>
+            </tr>
+        }
+        else if (listaEncomendas.Count == 0)
+        {
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    Ainda não tens encomendas registadas.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var item in listaEncomendas)
+            {
+                <tr>
+                    <td>@item.Numero</td>
+                    <td>@item.Data.ToShortDateString()</td>
+                    <td>@item.Total.ToString("C")</td>
+                    <td>
+                        <span class="badge @ObterCorEstado(item.Estado)">
+                            @item.Estado
+                        </span>
+                    </td>
+                    <td>
+                        <a href="minhas-encomendas/@item.Numero" class="btn btn-sm btn-outline-primary">
+                            Ver Detalhes
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    // Classe interna para simulação
+    private class EncomendaResumo
+    {
+        public int Numero { get; set; }
+        public DateTime Data { get; set; }
+        public decimal Total { get; set; }
+        public string Estado { get; set; } = string.Empty;
+    }
+
+    private List<EncomendaResumo> listaEncomendas = new List<EncomendaResumo>();
+
+    protected override void OnInitialized()
+    {
+        // Simulação de Backend
+        listaEncomendas = new List<EncomendaResumo>
+        {
+            new EncomendaResumo { Numero = 1001, Data = new DateTime(2025, 12, 14), Total = 45.50m, Estado = "Entregue" },
+            new EncomendaResumo { Numero = 1002, Data = DateTime.Now.AddDays(-2), Total = 12.99m, Estado = "Pendente" },
+            new EncomendaResumo { Numero = 1003, Data = DateTime.Now.AddDays(-10), Total = 150.00m, Estado = "Cancelada" }
+        };
+    }
+
+    private string ObterCorEstado(string estado) => estado switch
+    {
+        "Entregue" => "bg-success",
+        "Pendente" => "bg-warning text-dark",
+        "Cancelada" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}

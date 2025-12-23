@@ -1,0 +1,141 @@
+﻿@page "/registar"
+@using RCLComum.DTOs
+@using RCLComum.Services
+@using RCLComum.Interfaces
+
+@inject IApiServices ApiServices
+@inject NavigationManager NavigationManager
+
+<PageTitle>Criar Registo de Utilizador</PageTitle>
+
+<h1>Registe-se no MyColl</h1>
+<hr />
+
+<EditForm Model="RegisterData" OnValidSubmit="HandleRegistration">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <div class="row dadosPrincipaisRegisto">
+        <div class="col-md-6">
+            <h4>Dados de Acesso</h4>
+
+            <div class="mb-3">
+                <label class="form-label">Nome:</label>
+                <InputText @bind-Value="RegisterData.Nome" class="form-control" />
+                <ValidationMessage For="@(() => RegisterData.Nome)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email:</label>
+                <InputText @bind-Value="RegisterData.Email" class="form-control" />
+                <ValidationMessage For="@(() => RegisterData.Email)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Password:</label>
+                <InputText type="password" @bind-Value="RegisterData.Password" class="form-control" />
+                <ValidationMessage For="@(() => RegisterData.Password)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Confirmar Password:</label>
+                <InputText type="password" @bind-Value="RegisterData.ConfirmPassword" class="form-control" />
+                <ValidationMessage For="@(() => RegisterData.ConfirmPassword)" class="text-danger" />
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <h4>Dados Pessoais</h4>
+
+            <div class="mb-3">
+                <label class="form-label">NIF:</label>
+                <InputText @bind-Value="RegisterData.NIF" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Morada:</label>
+                <InputText @bind-Value="RegisterData.Morada" class="form-control" />
+            </div>
+        
+          
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">
+            @* Se tiveres a imagem saveicon, usa-a, senão usa texto *@
+            <img title="Gravar" src="_content/RCLComum/images/saveicon.png" style="height:30px" onerror="this.style.display='none'; this.parentNode.innerText='Registar'" />
+        </button>
+
+        <button type="button" class="btn btn-secondary ms-2" @onclick="Cancel">Cancelar</button>
+    </div>
+
+</EditForm>
+
+@if (IsModalVisible)
+{
+    <div class="modal" style="display:block;">
+        <div class="modal-content">
+            <span class="close" @onclick="CloseModal">&times;</span>
+            <p>@ModalMessage</p>
+        </div>
+    </div>
+}
+
+@code {
+    // Modelo ligado diretamente ao DTO
+    private RegisterModel RegisterData { get; set; } = new();
+
+    // Controle do Modal
+    private bool IsModalVisible { get; set; } = false;
+    private string ModalMessage { get; set; } = "";
+    private bool RegistrationSuccess { get; set; } = false;
+
+    private async Task HandleRegistration()
+    {
+        try
+        {
+            // Chamada ao Service
+            var result = await ApiServices.RegistarUtilizador(RegisterData);
+
+            if (result.Sucesso)
+            {
+                RegistrationSuccess = true;
+                ShowModal("Registo efetuado com sucesso! Vais ser redirecionado.");
+            }
+            else
+            {
+                RegistrationSuccess = false;
+                ShowModal($"Erro no registo: {result.Mensagem}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowModal($"Erro inesperado: {ex.Message}");
+        }
+    }
+
+    private async void ShowModal(string message)
+    {
+        ModalMessage = message;
+        IsModalVisible = true;
+        StateHasChanged(); // Força a atualização da UI
+
+        if (RegistrationSuccess)
+        {
+            // Espera 3 segundos e redireciona
+            await Task.Delay(3000);
+            IsModalVisible = false;
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private void CloseModal()
+    {
+        IsModalVisible = false;
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

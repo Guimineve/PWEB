@@ -1,0 +1,21 @@
+﻿/* Garante que o fundo cobria o ecrã todo */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
+}
+
+/* Importante para não ficar preto */
+.modal-content {
+    background-color: white; /* Força o branco */
+    border-radius: 8px; /* Cantos arredondados */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra bonita */
+}

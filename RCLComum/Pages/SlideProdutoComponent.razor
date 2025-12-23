@@ -1,0 +1,37 @@
+@using RCLComum.DTOs
+
+<div class="destaque-container p-4 mb-4 rounded shadow"
+     style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('@(ProdutoDestaque?.ImagemUrl)'); background-size: cover; color: white;">
+
+    @if (ProdutoDestaque != null)
+    {
+        <div class="row align-items-center" style="min-height: 300px;">
+            <div class="col-md-8">
+                <span class="badge bg-warning text-dark mb-2">Destaque Aleatório</span>
+                <h1 class="display-4 fw-bold">@ProdutoDestaque.Nome</h1>
+                <p class="lead">@ProdutoDestaque.Detalhe</p>
+                <h3 class="text-warning">@ProdutoDestaque.Preco.ToString("C")</h3>
+            </div>
+
+            <div class="col-md-4 text-center">
+                <button class="btn btn-outline-light btn-lg" @onclick="VerMais">
+                    <i class="bi bi-info-circle"></i> Ver Mais
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p>A carregar destaque...</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Produto? ProdutoDestaque { get; set; }
+
+    private void VerMais()
+    {
+        // Navegação
+    }
+}

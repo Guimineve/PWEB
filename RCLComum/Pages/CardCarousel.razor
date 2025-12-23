@@ -1,0 +1,31 @@
+@using RCLComum.DTOs
+@using RCLComum.Services
+@using RCLComum.Interfaces
+@using RCLComum.Pages
+@* NÃO PRECISAS DE @inject AQUI se já usaste [Inject] no ficheiro .cs *@
+
+<section class="carousel-cards">
+    <div class="cards-container d-flex overflow-hidden">
+
+        <button @onclick="PreviousCard" disabled="@IsDisabledPrevious" class="btn-cards-left btn btn-light">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+
+        @if (Produtos == null)
+        {
+            <p>A carregar...</p>
+        }
+        else
+        {
+            @foreach (var prod in Produtos)
+            {
+                <CardComponent ProdutoItem="@prod"
+                               MarginLeft="@(cardsUtilsServices.MarginLeftSlide.Count > Produtos.IndexOf(prod) ? cardsUtilsServices.MarginLeftSlide[Produtos.IndexOf(prod)] : "")" />
+            }
+        }
+
+        <button @onclick="NextCard" disabled="@IsDisabledNext" class="btn-cards-right btn btn-light">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+</section>
