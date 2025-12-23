@@ -29,7 +29,6 @@
                     <div class="alert alert-danger">@mensagemErro</div>
                 }
 
-                @* --- O TEU FORMULÁRIO --- *@
                 <EditForm Model="LoginModel" OnValidSubmit="LoginUser">
                     <DataAnnotationsValidator />
                     <ValidationSummary class="text-danger" />
@@ -52,7 +51,6 @@
                         </a>
                     </div>
                 </EditForm>
-                @* ----------------------- *@
 
             </div>
         </div>
@@ -68,7 +66,7 @@
 
     private void VoltarHome()
     {
-        NavigationManager.NavigateTo("/",forceLoad:true);
+        NavigationManager.NavigateTo("/");
     }
 
     private async Task LoginUser()
@@ -81,7 +79,7 @@
             if (resultado.Sucesso)
             {
                 // Login OK -> Vai para a Home
-                NavigationManager.NavigateTo("/", forceLoad: true);
+                NavigationManager.NavigateTo("/");
             }
             else
             {

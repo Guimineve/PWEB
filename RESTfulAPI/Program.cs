@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 using RESTfulAPI.Data;
 //using RESTfulAPI.Repositories;
@@ -86,7 +87,13 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
        .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Add os services
-builder.Services.AddControllers();
+//builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Esta linha resolve o problema dos ciclos infinitos
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 //builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 //builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();

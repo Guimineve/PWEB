@@ -38,6 +38,7 @@ namespace RCLComum.Services
                         // GUARDAR O TOKEN NO BROWSER (localStorage)
                         await _js.InvokeVoidAsync("localStorage.setItem", "authToken", loginResult.AccessToken);
 
+
                         apiResponse.Sucesso = true;
                         apiResponse.Data = true;
                         apiResponse.Mensagem = "Login efetuado com sucesso.";

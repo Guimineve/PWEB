@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Logging;
 using RCLComum.Interfaces;
 using RCLComum.Services;
 namespace ProdutosMAUI
@@ -17,21 +18,25 @@ namespace ProdutosMAUI
 
             builder.Services.AddMauiBlazorWebView();
 
+            builder.Services.AddAuthorizationCore();
+            builder.Services.AddScoped<CustomAuthStateProvider>();
+            builder.Services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<CustomAuthStateProvider>());
+
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
-    		builder.Logging.AddDebug();
+            builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Logging.AddDebug();
             string enderecoApi;
 
             if (DeviceInfo.Platform == DevicePlatform.Android)
             {
                 // Endereço especial para Android Emulator falar com o PC
                 // MUDA A PORTA "7000" PARA A PORTA REAL DA TUA API (HTTPS)
-                enderecoApi = "https://10.0.2.2:7000/";
+                enderecoApi = "https://pf1r44cp-7135.uks1.devtunnels.ms";
             }
             else
             {
                 // Para Windows Machine, iOS ou Browser
-                enderecoApi = "https://localhost:7000/";
+                enderecoApi = "https://pf1r44cp-7135.uks1.devtunnels.ms";
             }
 
             // O Erro "System.Net.Http.HttpClient" resolve-se com esta linha:

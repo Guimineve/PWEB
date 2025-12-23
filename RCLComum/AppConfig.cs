@@ -9,7 +9,7 @@ namespace RCLComum
     public static class AppConfig
     {
         
-        public static string BaseUrl = "https://localhost:7123/";
+        public static string BaseUrl = "https://pf1r44cp-7135.uks1.devtunnels.ms";
 
     }
 }

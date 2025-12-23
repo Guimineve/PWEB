@@ -1,6 +1,8 @@
 @using RCLComum.DTOs
 @using Microsoft.AspNetCore.Components
 @using RCLComum.Interfaces
+@using System.Globalization
+
 @inject NavigationManager NavigationManager
 
 @inject ICarrinhoService CarrinhoService
@@ -15,7 +17,7 @@
 
             <div class="card-content text-center mb-2">
                 <h5 class="mb-0 fw-bold text-white text-shadow">@ProdutoItem.Nome</h5>
-                <p class="mb-0 text-warning fw-bold text-shadow fs-5">@ProdutoItem.Preco.ToString("C")</p>
+                <p class="mb-0 text-warning fw-bold text-shadow fs-5">@ProdutoItem.Preco.ToString("C", new CultureInfo("pt-PT"))</p>
             </div>
 
             <div class="footer-button d-grid gap-2 px-2 pb-3">

@@ -4,12 +4,15 @@
 @using Microsoft.AspNetCore.Components
 @using RCLComum.Interfaces
 
+@inject IProdutoService ProdutoService
+@inject ICardsUtilsServices cardsUtilsServices
+
 <section class="carousel-cards my-3">
     <h5 class="px-3 border-start border-4 border-primary mb-3">2. Produtos Disponíveis</h5>
 
     @if (TemErro)
     {
-        <div class="alert alert-danger mx-3">Ocorreu um erro ao carregar o carrossel.</div>
+        <div class="alert alert-danger mx-3">Ocorreu um erro ao carregar o carrossel. Tenta verificar se a API está ligada.</div>
     }
     else
     {
@@ -19,7 +22,7 @@
                 <i class="bi bi-chevron-left"></i>
             </button>
 
-            @if (ProdutosVisiveis == null)
+            @if (TodosProdutos == null)
             {
                 <div class="p-5 w-100 text-center"><div class="spinner-border text-primary"></div></div>
             }
@@ -27,24 +30,25 @@
             {
                 <div class="p-5 w-100 text-center text-muted">
                     <i class="bi bi-emoji-frown fs-1"></i>
-                    <p>Nenhum produto nesta categoria.</p>
+                    <p>Nenhum produto encontrado.</p>
                 </div>
             }
             else
             {
                 @foreach (var prod in ProdutosVisiveis)
                 {
-                    // Lógica segura de margens
+                    // Lógica segura de margens para o slider funcionar
                     var index = ProdutosVisiveis.IndexOf(prod);
                     var margin = "margin-left: 0%";
 
                     if (cardsUtilsServices != null &&
-                    cardsUtilsServices.MarginLeftSlide != null &&
-                    cardsUtilsServices.MarginLeftSlide.Count > index)
+                        cardsUtilsServices.MarginLeftSlide != null &&
+                        cardsUtilsServices.MarginLeftSlide.Count > index)
                     {
                         margin = cardsUtilsServices.MarginLeftSlide[index];
                     }
 
+                    // AQUI: Assumo que tens um componente chamado CardComponent
                     <CardComponent ProdutoItem="@prod" MarginLeft="@margin" />
                 }
             }
@@ -59,10 +63,9 @@
 @code {
     [Parameter] public int CategoriaIdFiltro { get; set; } = 0;
 
-    [Inject] public IApiServices ApiServices { get; set; }
-    [Inject] public ICardsUtilsServices cardsUtilsServices { get; set; }
+    // Removemos o IApiServices e usamos os @inject lá em cima, é mais limpo.
 
-    private List<Produto> TodosProdutos { get; set; } = new();
+    private List<Produto>? TodosProdutos { get; set; } // Pode ser null no início
     private List<Produto> ProdutosVisiveis { get; set; } = new();
 
     private bool IsDisabledNext { get; set; } = false;
@@ -73,20 +76,22 @@
     {
         try
         {
-            var result = await ApiServices.GetProdutosAsync();
-            if (result.Sucesso && result.Data != null)
-            {
-                TodosProdutos = result.Data;
-                ProdutosVisiveis = TodosProdutos;
-                await ResetSlider();
-            }
+            // Alteração Principal: Chamada direta ao ProdutoService
+            TodosProdutos = await ProdutoService.GetProdutosAsync();
+
+            // Inicializa a lista visível com tudo o que veio da API
+            ProdutosVisiveis = TodosProdutos;
+            
+            await ResetSlider();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine($"Erro no carrossel: {ex.Message}");
             TemErro = true;
         }
     }
 
+    // Este método é chamado sempre que o parametro CategoriaIdFiltro muda (quando clicas numa categoria)
     protected override async Task OnParametersSetAsync()
     {
         if (TodosProdutos == null || !TodosProdutos.Any()) return;
@@ -123,7 +128,9 @@
         }
 
         IsDisabledPrevious = true;
+        // Só desativa o botão "Próximo" se houver 1 ou 0 produtos
         IsDisabledNext = ProdutosVisiveis.Count <= 1;
+        
         await Task.CompletedTask;
     }
 
@@ -143,6 +150,7 @@
         if (cardsUtilsServices.CountSlide < ProdutosVisiveis.Count - 1)
         {
             cardsUtilsServices.CountSlide++;
+            // Nota: Este -260px deve ser igual à largura do teu CardComponent + Margem
             cardsUtilsServices.MarginLeftSlide[cardsUtilsServices.CountSlide - 1] = "margin-left:-260px";
             IsDisabledPrevious = false;
         }

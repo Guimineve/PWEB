@@ -1,20 +1,27 @@
 using ProdutosBlazor.Components;
 using RCLComum.Services;
 using RCLComum.Interfaces;
+using Microsoft.AspNetCore.Components.Authorization;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
-builder.Services.AddScoped<IApiServices, ApiServicesMock>();
+builder.Services.AddScoped<IApiServices, ApiServices>();
 builder.Services.AddScoped<ICardsUtilsServices, CardsUtilsServices>();
 builder.Services.AddScoped<ICarrinhoService, CarrinhoService>();
 
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://localhost:7000") 
+    BaseAddress = new Uri("https://pf1r44cp-7135.uks1.devtunnels.ms") 
 });
+
+// Configura a Autenticação
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<CustomAuthStateProvider>());
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

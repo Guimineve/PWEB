@@ -111,10 +111,10 @@ public class UtilizadoresController : ControllerBase
 
             return new ObjectResult(new
             {
-                accesstoken = jwt,
-                tokentype = "bearer",
-                utilizadorid = utilizadorAtual.Id,
-                utilizadornome = utilizadorAtual.Nome
+                AccessToken = jwt,
+                TokenType = "bearer",
+                UtilizadorId = utilizadorAtual.Id,
+                UtilizadorNome = utilizadorAtual.Nome
             });
         }
         else
