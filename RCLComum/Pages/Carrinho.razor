@@ -1,26 +1,55 @@
 @page "/carrinho"
+@using RCLComum.Services
+@using RCLComum.Interfaces
+@inject ICarrinhoService CarrinhoService
 
 <div class="container mt-4">
-    <div class="d-flex align-items-center mb-4">
-        <i class="bi bi-cart-fill text-success fs-2 me-3"></i>
-        <h2 class="fw-bold m-0">Lista de Aquisições</h2>
-    </div>
+    <h3>O Teu Carrinho</h3>
 
-    <div class="card shadow-sm border-0 rounded-4 p-4">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Qtd</th>
-                    <th>Valor Est.</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td colspan="4" class="text-center py-4">O teu carrinho está vazio.</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    @if (CarrinhoService.Itens.Count == 0)
+    {
+        <div class="alert alert-info">O teu carrinho está vazio. Vai às compras!</div>
+        <a href="/" class="btn btn-primary">Voltar à Loja</a>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço</th>
+                        <th>Qtd</th>
+                        <th>Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in CarrinhoService.Itens)
+                    {
+                        <tr>
+                            <td>@item.Produto.Nome</td>
+                            <td>@item.Produto.Preco.ToString("C")</td>
+                            <td>@item.Quantidade</td>
+                            <td>@item.Total.ToString("C")</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm"
+                                        @onclick="() => CarrinhoService.RemoverProduto(item.Produto)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded shadow-sm">
+            <h4>Total: <span class="text-success">@CarrinhoService.ValorTotal.ToString("C")</span></h4>
+
+            <button class="btn btn-success btn-lg">
+                Finalizar Encomenda <i class="bi bi-check-circle"></i>
+            </button>
+        </div>
+    }
 </div>

@@ -1,0 +1,49 @@
+@using RCLComum.DTOs
+@using Microsoft.AspNetCore.Components
+@using RCLComum.Interfaces
+@inject ICarrinhoService CarrinhoService
+@* Se o produto tiver imagem, mostramos o cartão *@
+@if (ProdutoItem != null)
+{
+    @* Usamos o ImagemUrl que já tens no DTO para o fundo *@
+    <div title="@ProdutoItem.Nome" class="card-produto"
+         style="background-image:url('@ProdutoItem.ImagemUrl'); @MarginLeft; background-size: cover; background-position: center;">
+
+        <div class="card-content">
+            <p>@ProdutoItem.Nome</p>
+        </div>
+        <div class="footer-button d-flex justify-content-center gap-2">
+            <button class="btn btn-sm btn-success" @onclick="AdicionarAoCarrinho">
+                <i class="bi bi-cart-plus"></i>
+            </button>
+
+            <button class="btn btn-sm btn-light">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+        <div class="footer-button">
+            <button class="btn btn-sm btn-light" @onclick="VerDetalhes">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Produto ProdutoItem { get; set; }
+
+    // Esta margem vem do pai (Carousel) e é o que faz o slider mexer
+    [Parameter]
+    public string MarginLeft { get; set; }
+
+    private void VerDetalhes()
+    {
+        // Lógica para navegar para detalhes
+    }
+    private void AdicionarAoCarrinho()
+    {
+        CarrinhoService.AdicionarProduto(ProdutoItem);
+        // Opcional: Mostrar um "Toast" ou alerta pequeno a dizer "Adicionado!"
+    }
+}

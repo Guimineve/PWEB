@@ -1,0 +1,112 @@
+@page "/fornecedor/produtos"
+@using Microsoft.AspNetCore.Authorization
+@using RCLComum.DTOs
+@using RCLComum.Services
+@using RCLComum.Interfaces
+
+@inject NavigationManager Navigation
+@inject IProdutoService ProdutoService
+
+<PageTitle>Meus Produtos - Fornecedor</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Meus Produtos</h1>
+    <button class="btn btn-success" @onclick="CriarNovo">
+        <i class="bi bi-plus-circle"></i> Novo Produto
+    </button>
+</div>
+
+@if (meusProdutos == null)
+{
+    <div class="text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">A carregar...</span>
+        </div>
+        <p>A carregar produtos...</p>
+    </div>
+}
+else if (!meusProdutos.Any())
+{
+    <div class="alert alert-info">
+        Não tens produtos registados. Clica em "Novo Produto" para começar!
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var p in meusProdutos)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">@p.Nome</span>
+
+                        @* Lógica adaptada ao DTO: Usamos o bool Visivel *@
+                        @if (p.Visivel)
+                        {
+                            <span class="badge bg-success">Visível</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Oculto</span>
+                        }
+                    </div>
+
+                    <div class="card-body">
+                        @* Usa a propriedade ImagemUrl que criámos no DTO *@
+                        <img src="@p.ImagemUrl" class="img-fluid mb-2 rounded" style="height: 150px; width: 100%; object-fit: cover;">
+
+                        <p class="mb-1">Preço: <strong>@p.Preco.ToString("C")</strong></p>
+                        <p class="mb-1">Stock: <strong>@p.Stock un.</strong></p>
+
+                        <small class="text-muted">
+                            @(p.Visivel ? "Disponível para venda" : "Indisponível")
+                        </small>
+                    </div>
+
+                    <div class="card-footer bg-light d-flex justify-content-between">
+                        @* Passamos o ID para o método Editar *@
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => Editar(p.Id)">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">Suspender</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Produto>? meusProdutos;
+
+    // Nota: Num cenário real com autenticação, o ID vem do User Claims, não precisamos de hardcode.
+    // private int fornecedorIdLogado = 99;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Chama o serviço. O serviço vai ligar à API.
+            // O await "pausa" aqui até os dados chegarem.
+            meusProdutos = await ProdutoService.GetProdutosAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro crítico: {ex.Message}");
+            // Opcional: Mostrar uma mensagem de erro no ecrã
+        }
+    }
+
+    private void CriarNovo()
+    {
+        // Navega para a página de criação
+        Navigation.NavigateTo("/fornecedor/produtos/criar");
+    }
+
+    private void Editar(int produtoId)
+    {
+        // Navega para a rota de edição passando o ID
+        Navigation.NavigateTo($"/fornecedor/produtos/editar/{produtoId}");
+    }
+}

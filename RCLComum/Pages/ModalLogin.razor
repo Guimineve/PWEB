@@ -1,0 +1,98 @@
+﻿@page "/modalogin"
+@using RCLComum.DTOs
+@using RCLComum.Services
+
+@using RCLComum.Interfaces
+
+@inject IApiServices ApiServices
+@inject NavigationManager NavigationManager
+
+<div class="modal-backdrop fade show"></div>
+
+<div class="modal fade show" style="display: block;" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Efetuar Login</h5>
+                <button type="button" class="close" @onclick="VoltarHome" style="border:none; background:none;">
+                    <span aria-hidden="true" style="font-size: 2rem;">&times;</span>
+                </button>
+                <a href="/" class="close">
+                    <img title="Recuar" src="/_content/RCLComum/images/back.png" style="height:30px" onerror="this.style.display='none'; this.parentNode.innerText='Voltar'" />
+                </a>
+            </div>
+
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(mensagemErro))
+                {
+                    <div class="alert alert-danger">@mensagemErro</div>
+                }
+
+                @* --- O TEU FORMULÁRIO --- *@
+                <EditForm Model="LoginModel" OnValidSubmit="LoginUser">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" />
+
+                    <label for="mail" class="form-label">Email:</label>
+                    <InputText id="mail" @bind-Value="LoginModel.Email" class="form-control" placeholder="teu@email.com" />
+                    <ValidationMessage For="() => LoginModel.Email" class="text-danger" />
+
+                    <label for="password" class="form-label">Password:</label>
+                    <InputText id="password" type="password" @bind-Value="LoginModel.Password" class="form-control" />
+                    <ValidationMessage For="() => LoginModel.Password" class="text-danger" />
+
+                    <div class="mt-4 d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn btn-outline-secondary loginModalSubmitButton">
+                            <img title="Login" src="/_content/RCLComum/images/register.png" style="height:30px" onerror="this.style.display='none'; this.parentNode.innerText='Entrar'" />
+                        </button>
+
+                        <a href="/" class="btn btn-outline-secondary loginModalBackButton">
+                            <img title="Recuar" src="/_content/RCLComum/images/back.png" style="height:30px" onerror="this.style.display='none'; this.parentNode.innerText='Voltar'" />
+                        </a>
+                    </div>
+                </EditForm>
+                @* ----------------------- *@
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Instanciar o modelo
+    private LoginModel LoginModel { get; set; } = new();
+
+    // Variável para mensagens de erro
+    private string mensagemErro = string.Empty;
+
+    private void VoltarHome()
+    {
+        NavigationManager.NavigateTo("/",forceLoad:true);
+    }
+
+    private async Task LoginUser()
+    {
+        try
+        {
+            // Chama o nosso ApiServices
+            var resultado = await ApiServices.Login(LoginModel);
+
+            if (resultado.Sucesso)
+            {
+                // Login OK -> Vai para a Home
+                NavigationManager.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                // Login Falhou -> Mostra erro
+                mensagemErro = resultado.Mensagem;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = "Erro ao conectar ao servidor.";
+            Console.WriteLine(ex.Message);
+        }
+    }
+}

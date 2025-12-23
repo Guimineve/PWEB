@@ -1,22 +1,19 @@
 ﻿@inherits LayoutComponentBase
+@using RCLComum.Pages
 
-<div class="page-wrapper">
-    @* Menu no topo *@
-    <header>
+<div class="page">
+    <div class="sidebar">
         <NavMenu />
-    </header>
+    </div>
 
     <main>
-        @* Barra de contexto (opcional, como na Ficha 9) *@
-        <div class="top-context px-4 py-2 text-end border-bottom bg-light">
-            <small class="text-muted">ISEC - Programação Web 2025/26</small>
+        <div class="top-row px-4">
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            s
         </div>
 
         <article class="content px-4">
-         
-            <div class="container-fluid py-2">
-                @Body
-            </div>
+            @Body
         </article>
     </main>
 </div>

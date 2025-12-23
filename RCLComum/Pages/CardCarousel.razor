@@ -1,0 +1,135 @@
+@using RCLComum.DTOs
+@using RCLComum.Services
+@using RCLComum.Pages
+@using Microsoft.AspNetCore.Components
+@using RCLComum.Interfaces
+
+<section class="carousel-cards my-3">
+    <h5 class="px-3 border-start border-4 border-primary mb-3">2. Produtos Disponíveis</h5>
+
+    <div class="cards-container d-flex overflow-hidden position-relative">
+
+        <button @onclick="PreviousCard" disabled="@IsDisabledPrevious" class="btn btn-light shadow-sm position-absolute start-0 top-50 translate-middle-y" style="z-index: 10;">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+
+        @if (ProdutosVisiveis == null)
+        {
+            <div class="p-5 w-100 text-center"><div class="spinner-border"></div></div>
+        }
+        else if (ProdutosVisiveis.Count == 0)
+        {
+            <div class="p-5 w-100 text-center text-muted">
+                <i class="bi bi-emoji-frown fs-1"></i>
+                <p>Nenhum produto nesta categoria.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var prod in ProdutosVisiveis)
+            {
+                var index = ProdutosVisiveis.IndexOf(prod);
+                var margin = "margin-left: 0%";
+
+                if (cardsUtilsServices != null &&
+                cardsUtilsServices.MarginLeftSlide != null &&
+                cardsUtilsServices.MarginLeftSlide.Count > index)
+                {
+                    margin = cardsUtilsServices.MarginLeftSlide[index];
+                }
+
+                <CardComponent ProdutoItem="@prod" MarginLeft="@margin" />
+            }
+        }
+
+        <button @onclick="NextCard" disabled="@IsDisabledNext" class="btn btn-light shadow-sm position-absolute end-0 top-50 translate-middle-y" style="z-index: 10;">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+</section>
+
+@code {
+    // --- PARAMETRO QUE VEM DA HOME ---
+    [Parameter]
+    public int CategoriaIdFiltro { get; set; } = 0;
+
+    [Inject] public IApiServices ApiServices { get; set; }
+    [Inject] public ICardsUtilsServices cardsUtilsServices { get; set; }
+
+    // Duas listas: Uma com tudo (Cache), outra só com o que mostramos
+    private List<Produto> TodosProdutos { get; set; } = new();
+    private List<Produto> ProdutosVisiveis { get; set; } = new();
+
+    private bool IsDisabledNext { get; set; } = false;
+    private bool IsDisabledPrevious { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Carrega TUDO apenas uma vez
+        var result = await ApiServices.GetProdutosAsync();
+        if (result.Sucesso && result.Data != null)
+        {
+            TodosProdutos = result.Data;
+            ProdutosVisiveis = TodosProdutos; // Começa a mostrar tudo
+            await ResetSlider();
+        }
+    }
+
+    // --- MAGIA: Deteta quando a categoria muda na Home ---
+    protected override async Task OnParametersSetAsync()
+    {
+        if (TodosProdutos == null || !TodosProdutos.Any()) return;
+
+        if (CategoriaIdFiltro == 0)
+        {
+            ProdutosVisiveis = TodosProdutos;
+        }
+        else
+        {
+            ProdutosVisiveis = TodosProdutos.Where(p => p.CategoriaId == CategoriaIdFiltro).ToList();
+        }
+
+        await ResetSlider();
+    }
+
+    private async Task ResetSlider()
+    {
+        if (cardsUtilsServices == null) return;
+
+        cardsUtilsServices.CountSlide = 0;
+        cardsUtilsServices.Index = 0;
+        cardsUtilsServices.MarginLeftSlide = new List<string>();
+
+        foreach (var p in ProdutosVisiveis)
+        {
+            cardsUtilsServices.MarginLeftSlide.Add("margin-left:0%");
+        }
+        IsDisabledPrevious = true;
+        IsDisabledNext = ProdutosVisiveis.Count <= 1; // Ajustar lógica conforme nº de cards visíveis
+        await Task.CompletedTask;
+    }
+
+    private void PreviousCard()
+    {
+        if (cardsUtilsServices.CountSlide > 0)
+        {
+            cardsUtilsServices.MarginLeftSlide[cardsUtilsServices.CountSlide - 1] = "margin-left:0%";
+            cardsUtilsServices.CountSlide--;
+            IsDisabledNext = false;
+        }
+        if (cardsUtilsServices.CountSlide == 0) IsDisabledPrevious = true;
+    }
+
+    private void NextCard()
+    {
+        // Nota: Ajusta o limite conforme quantos cards queres mostrar de cada vez
+        if (cardsUtilsServices.CountSlide < ProdutosVisiveis.Count - 1)
+        {
+            cardsUtilsServices.CountSlide++;
+            // Ajusta -220px para a largura do teu card + margem
+            cardsUtilsServices.MarginLeftSlide[cardsUtilsServices.CountSlide - 1] = "margin-left:-220px";
+            IsDisabledPrevious = false;
+        }
+        // Lógica simplificada de Next disabled
+    }
+}

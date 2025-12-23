@@ -1,0 +1,19 @@
+.card-produto {
+    min-width: 200px; /* Largura fixa para o slider funcionar */
+    height: 300px;
+    margin-right: 15px; /* Espaço entre cartões */
+    border-radius: 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Texto no fundo */
+    transition: margin-left 0.5s ease; /* Animação suave */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.card-content {
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 10px;
+    text-align: center;
+}

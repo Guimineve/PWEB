@@ -3,11 +3,11 @@
         <a class="navbar-brand px-3" href="">MyColl</a>
 
         @* Botão para Mobile (Hambúrguer) *@
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <button class="navbar-toggler" type="button" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarContent">
+        <div class="@NavMenuCssClass" id="navbarContent" @onclick="ToggleNavMenu">
             <ul class="navbar-nav me-auto mb-2 mb-md-0">
                 <li class="nav-item px-2">
                     <NavLink class="nav-link" href="carrinho" Match="NavLinkMatch.All">
@@ -15,11 +15,15 @@
                     </NavLink>
                 </li>
                 <li class="nav-item px-2">
-                    <NavLink class="nav-link" href="favoritos">
-                        <span class="bi bi-collection-fill"></span> Favoritos
+                    <NavLink class="nav-link" href="minhas-encomendas" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill"></span> Encomendas
                     </NavLink>
                 </li>
-             
+                <li class="nav-item px-2">
+                    <NavLink class="nav-link" href="fornecedor/produtos" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill"></span> Meus Produtos
+                    </NavLink>
+                </li>
             </ul>
 
             @* Lado direito: Info ou Login *@
@@ -29,7 +33,7 @@
                     
 
                 </NavLink>
-                <NavLink class="nav-link text-light-50" href="Login">
+                <NavLink class="nav-link text-light-50" href="modalogin">
 
                     <span class="bi bi-info-circle-fill"></span> Login
 
@@ -38,3 +42,19 @@
         </div>
     </div>
 </nav>
+
+@code {
+    // Começa como true para o menu estar fechado inicialmente
+    private bool collapseNavMenu = true;
+
+    // Esta propriedade decide quais as classes CSS a aplicar
+    // Se true -> "collapse" (escondido)
+    // Se false -> "collapse show" (mostra o menu)
+    private string NavMenuCssClass => collapseNavMenu ? "collapse navbar-collapse" : "collapse navbar-collapse show";
+
+    // Este método inverte o valor quando clicas no botão
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
