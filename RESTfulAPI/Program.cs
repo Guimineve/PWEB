@@ -87,7 +87,7 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
        .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Add os services
-//builder.Services.AddControllers();
+builder.Services.AddControllers();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
