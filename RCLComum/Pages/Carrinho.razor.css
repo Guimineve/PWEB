@@ -1,0 +1,58 @@
+/* Botão REMOVER (Estilo Premium) */
+.btn-remover {
+    background-color: transparent;
+    color: #dc3545; /* Vermelho */
+    border: 1px solid #dc3545;
+    padding: 6px 16px;
+    border-radius: 50px; /* Formato Pill */
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+    .btn-remover:hover {
+        background-color: #dc3545;
+        color: white;
+        box-shadow: 0 4px 10px rgba(220, 53, 69, 0.2);
+        cursor: pointer;
+    }
+
+    .btn-remover:active {
+        transform: scale(0.95);
+    }
+
+/* Botões de QUANTIDADE (+ e -) */
+/* Botões de QUANTIDADE (+ e -) */
+.btn-qtd {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    color: #495057; /* Cinzento escuro para se ver bem */
+    /* ALINHAMENTO PERFEITO DO TEXTO */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* ESTILO DA FONTE */
+    font-size: 1.4rem; /* Tamanho grande para veres o sinal */
+    font-weight: 400; /* Peso normal */
+    line-height: 1; /* Remove espaçamento extra */
+    padding-bottom: 3px; /* Pequeno ajuste para centrar o '-' verticalmente */
+
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .btn-qtd:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #000; /* Fica preto ao passar o rato */
+    }
+
+    .btn-qtd:active {
+        background-color: #dee2e6;
+        transform: scale(0.95);
+    }

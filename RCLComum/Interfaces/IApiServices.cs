@@ -21,5 +21,6 @@ namespace RCLComum.Interfaces
 
         Task<ApiResponse<List<Encomenda>>> GetMinhasEncomendasAsync(int userId);
         Task<ApiResponse<bool>> CriarEncomendaAsync(Encomenda novaEncomenda);
+        Task<ApiResponse<Produto>> GetProdutoByIdAsync(int id);
     }
 }

@@ -63,5 +63,31 @@ namespace RCLComum.Services
         {
             OnChange?.Invoke();
         }
+        public void AumentarQuantidade(Produto produto)
+        {
+            var item = _itens.FirstOrDefault(i => i.Produto.Id == produto.Id);
+            if (item != null)
+            {
+                item.Quantidade++;
+                NotificarMudanca();
+            }
+        }
+
+        public void DiminuirQuantidade(Produto produto)
+        {
+            var item = _itens.FirstOrDefault(i => i.Produto.Id == produto.Id);
+            if (item != null)
+            {
+                if (item.Quantidade > 1)
+                {
+                    item.Quantidade--;
+                }
+                else
+                {
+                    _itens.Remove(item);
+                }
+                NotificarMudanca();
+            }
+        }
     }
 }

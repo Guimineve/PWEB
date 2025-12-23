@@ -175,7 +175,6 @@ namespace RCLComum.Services
 
         public async Task<ApiResponse<bool>> CriarEncomendaAsync(Encomenda novaEncomenda)
         {
-            // Exemplo rápido para criar encomenda
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("api/Encomendas", novaEncomenda);
@@ -190,6 +189,40 @@ namespace RCLComum.Services
             {
                 return new ApiResponse<bool> { Sucesso = false, Mensagem = ex.Message };
             }
+
+        }
+
+        public async Task<ApiResponse<Produto>> GetProdutoByIdAsync(int id)
+        {
+            var response = new ApiResponse<Produto>();
+
+            try
+            {
+                // 1. Faz o pedido ao servidor (ajusta a rota "api/Produtos/{id}" se o teu colega usar outra)
+                var result = await _httpClient.GetAsync($"api/Produtos/{id}");
+
+                // 2. Verifica se correu bem (Código 200 OK)
+                if (result.IsSuccessStatusCode)
+                {
+                    response.Sucesso = true;
+                    // Converte o JSON que veio do servidor para um objeto Produto
+                    response.Data = await result.Content.ReadFromJsonAsync<Produto>();
+                }
+                else
+                {
+                    // Se der erro (ex: 404 Not Found)
+                    response.Sucesso = false;
+                    response.Mensagem = "Produto não encontrado.";
+                }
+            }
+            catch (Exception ex)
+            {
+                // Se houver erro de rede ou o servidor estiver desligado
+                response.Sucesso = false;
+                response.Mensagem = ex.Message;
+            }
+
+            return response;
         }
     }
 }

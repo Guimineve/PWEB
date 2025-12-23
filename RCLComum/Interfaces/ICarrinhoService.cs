@@ -16,6 +16,8 @@ namespace RCLComum.Interfaces
         void AdicionarProduto(Produto produto);
         void RemoverProduto(Produto produto);
         void LimparCarrinho();
+        void AumentarQuantidade(Produto produto);
+        void DiminuirQuantidade(Produto produto);
 
         // O evento mágico que avisa os componentes para atualizarem
         event Action OnChange;
